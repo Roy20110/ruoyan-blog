@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情绪可视化 | 文本情绪分析</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f0f1a;
+  --bg-card:rgba(20,20,35,0.6);
+  --bg-card-hover:rgba(30,30,50,0.7);
+  --border:rgba(100,100,160,0.15);
+  --border-hover:rgba(139,92,246,0.4);
+  --text-primary:#e8e8f0;
+  --text-secondary:#9090a8;
+  --text-muted:#606078;
+  --joy:#f59e0b;
+  --sadness:#3b82f6;
+  --fear:#8b5cf6;
+  --anger:#ef4444;
+  --calm:#14b8a6;
+  --surprise:#ec4899;
+  --accent:#8b5cf6;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg);
+  color:var(--text-primary);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(139,92,246,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(59,130,246,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(236,72,153,0.04) 0%, transparent 60%);
+  z-index:0;
+  pointer-events:none;
+}
+.container{
+  position:relative;z-index:1;
+  max-width:1400px;
+  margin:0 auto;
+  padding:24px;
+}
+/* 顶部 */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;
+}
+.header-left{display:flex;align-items:center;gap:16px}
+.header-icon{
+  width:48px;height:48px;
+  background:linear-gradient(135deg,var(--accent),var(--surprise));
+  border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(139,92,246,0.3);
+}
+.header-icon svg{width:24px;height:24px;fill:#fff}
+.header-title{font-size:24px;font-weight:700;letter-spacing:1px}
+.header-subtitle{font-size:12px;color:var(--text-muted);letter-spacing:2px;margin-top:2px}
+.header-nav{display:flex;gap:8px}
+.header-nav a{
+  color:var(--text-muted);
+  text-decoration:none;
+  font-size:13px;
+  padding:8px 16px;
+  border-radius:8px;
+  transition:all 0.2s;
+  border:1px solid transparent;
+}
+.header-nav a:hover{
+  color:var(--text-primary);
+  background:var(--bg-card);
+  border-color:var(--border);
+}
+/* 主布局 */
+.main-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  margin-bottom:20px;
+}
+/* 卡片 */
+.card{
+  background:var(--bg-card);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  transition:border-color 0.3s;
+}
+.card:hover{border-color:var(--border-hover)}
+.card-header{
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-title{
+  font-size:14px;font-weight:600;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title svg{width:16px;height:16px;fill:var(--accent)}
+.card-body{padding:20px}
+/* 文本输入 */
+.textarea-wrap{position:relative}
+textarea{
+  width:100%;
+  min-height:320px;
+  background:rgba(10,10,20,0.5);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+  color:var(--text-primary);
+  font-family:inherit;
+  font-size:14px;
+  line-height:1.8;
+  resize:vertical;
+  outline:none;
+  transition:border-color 0.3s;
+}
+textarea:focus{border-color:var(--accent)}
+textarea::placeholder{color:var(--text-muted)}
+.text-stats{
+  display:flex;gap:16px;
+  margin-top:12px;
+  flex-wrap:wrap;
+}
+.stat-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--text-muted);
+}
+.stat-item span{color:var(--text-secondary);font-weight:600}
+/* 可视化区域 */
+.viz-wrap{
+  position:relative;
+  height:360px;
+  border-radius:12px;
+  overflow:hidden;
+  background:rgba(5,5,15,0.5);
+}
+#particleCanvas{
+  width:100%;height:100%;
+  display:block;
+}
+.viz-info{
+  position:absolute;
+  top:16px;left:16px;
+  z-index:2;
+}
+.viz-mood{
+  font-size:20px;font-weight:700;
+  margin-bottom:4px;
+}
+.viz-desc{font-size:12px;color:var(--text-muted)}
+/* 底部分析面板 */
+.analysis-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:20px;
+}
+/* 情绪条 */
+.emotion-list{display:flex;flex-direction:column;gap:14px}
+.emotion-item{
+  display:flex;flex-direction:column;gap:6px;
+}
+.emotion-label{
+  display:flex;justify-content:space-between;
+  font-size:12px;
+}
+.emotion-name{display:flex;align-items:center;gap:6px;color:var(--text-secondary)}
+.emotion-dot{width:8px;height:8px;border-radius:50%}
+.emotion-value{color:var(--text-muted);font-weight:600}
+.emotion-bar{
+  height:6px;
+  background:rgba(100,100,160,0.1);
+  border-radius:3px;
+  overflow:hidden;
+}
+.emotion-fill{
+  height:100%;
+  border-radius:3px;
+  transition:width 0.8s ease;
+  width:0%;
+}
+/* 雷达图 */
+.radar-wrap{
+  display:flex;align-items:center;justify-content:center;
+  height:220px;
+}
+#radarCanvas{width:220px;height:220px}
+/* 关键词 */
+.keywords-wrap{
+  display:flex;flex-wrap:wrap;
+  gap:8px;
+  align-content:flex-start;
+  min-height:220px;
+}
+.keyword-chip{
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  transition:all 0.2s;
+  cursor:default;
+}
+.keyword-chip:hover{transform:scale(1.05)}
+/* 按钮组 */
+.btn-group{
+  display:flex;gap:8px;
+  margin-top:16px;
+}
+.btn{
+  padding:10px 20px;
+  border:none;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s;
+  font-family:inherit;
+  display:flex;align-items:center;gap:6px;
+}
+.btn svg{width:14px;height:14px;fill:currentColor}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),var(--surprise));
+  color:#fff;
+}
+.btn-primary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 16px rgba(139,92,246,0.4);
+}
+.btn-secondary{
+  background:rgba(100,100,160,0.1);
+  color:var(--text-secondary);
+  border:1px solid var(--border);
+}
+.btn-secondary:hover{
+  background:rgba(100,100,160,0.2);
+  color:var(--text-primary);
+}
+/* 示例文本 */
+.examples{
+  display:flex;gap:8px;flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.example-chip{
+  padding:5px 12px;
+  background:rgba(139,92,246,0.1);
+  border:1px solid rgba(139,92,246,0.2);
+  border-radius:14px;
+  font-size:11px;
+  color:var(--accent);
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.example-chip:hover{
+  background:rgba(139,92,246,0.2);
+  border-color:var(--accent);
+}
+/* 响应式 */
+@media(max-width:1024px){
+  .main-grid{grid-template-columns:1fr}
+  .analysis-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 顶部 -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <div>
+        <div class="header-title">文本情绪可视化</div>
+        <div class="header-subtitle">EMOTION VISUALIZATION</div>
+      </div>
+    </div>
+    <div class="header-nav">
+      <a href="index.html">博客首页</a>
+      <a href="dream-viz.html">梦境可视化</a>
+    </div>
+  </div>
+
+  <!-- 主区域 -->
+  <div class="main-grid">
+    <!-- 文本输入 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          输入文本
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="examples">
+          <span class="example-chip" onclick="loadExample(0)">喜悦示例</span>
+          <span class="example-chip" onclick="loadExample(1)">悲伤示例</span>
+          <span class="example-chip" onclick="loadExample(2)">恐惧示例</span>
+          <span class="example-chip" onclick="loadExample(3)">愤怒示例</span>
+          <span class="example-chip" onclick="loadExample(4)">平静示例</span>
+          <span class="example-chip" onclick="loadExample(5)">混合情绪</span>
+        </div>
+        <div class="textarea-wrap">
+          <textarea id="textInput" placeholder="粘贴或输入你想分析的文本...&#10;&#10;支持小说、剧本、日记、歌词、文章等任何文本内容。系统会自动分析情绪倾向，生成流动粒子和色彩波形。" oninput="analyzeText()"></textarea>
+        </div>
+        <div class="text-stats">
+          <div class="stat-item">字符数：<span id="charCount">0</span></div>
+          <div class="stat-item">句子数：<span id="sentenceCount">0</span></div>
+          <div class="stat-item">词汇数：<span id="wordCount">0</span></div>
+          <div class="stat-item">主导情绪：<span id="dominantEmotion">-</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="analyzeText()">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            分析情绪
+          </button>
+          <button class="btn btn-secondary" onclick="clearText()">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            清空
+          </button>
+          <button class="btn btn-secondary" onclick="exportImage()">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            导出图片
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 粒子可视化 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          情绪粒子流场
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="viz-wrap">
+          <canvas id="particleCanvas"></canvas>
+          <div class="viz-info">
+            <div class="viz-mood" id="vizMood" style="color:var(--calm)">平静</div>
+            <div class="viz-desc" id="vizDesc">输入文本开始分析</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分析面板 -->
+  <div class="analysis-grid">
+    <!-- 情绪强度 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+          情绪强度分布
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="emotion-list" id="emotionBars"></div>
+      </div>
+    </div>
+
+    <!-- 雷达图 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+          情绪雷达图
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="radar-wrap">
+          <canvas id="radarCanvas" width="220" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 关键词 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/></svg>
+          情绪关键词
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="keywords-wrap" id="keywordsWrap">
+          <span style="font-size:12px;color:var(--text-muted);align-self:center">输入文本后显示关键词</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 情绪词典
+const emotionDict = {
+  joy: {words:['开心','快乐','高兴','喜悦','兴奋','激动','满足','幸福','温暖','美好','微笑','欢笑','轻松','愉快','欣喜','欢畅','舒畅','甜美','温馨','治愈','喜欢','爱','热爱','开心','快乐','高兴','喜悦','兴奋','激动','满足','幸福','温暖','美好','微笑','欢笑','轻松','愉快','欣喜','欢畅','舒畅','甜美','温馨','治愈','喜欢','爱','热爱','wonderful','amazing','great','happy','joy','love','beautiful','excellent','fantastic','brilliant','awesome','delight','pleasure','bliss','cheer','smile','laugh','enjoy','fun','exciting','thrilling'], color:'#f59e0b', name:'喜悦'},
+  sadness: {words:['悲伤','难过','伤心','哭泣','流泪','痛苦','失落','孤独','寂寞','绝望','沮丧','忧郁','忧伤','哀愁','悲戚','心酸','心碎','凄凉','孤寂','落寞','遗憾','惋惜','怀念','思念','想念','离别','告别','失去','消失','死亡','离开','远去','悲伤','难过','伤心','哭泣','流泪','痛苦','失落','孤独','寂寞','绝望','沮丧','忧郁','忧伤','哀愁','悲戚','心酸','心碎','凄凉','孤寂','落寞','遗憾','惋惜','怀念','思念','想念','离别','告别','失去','消失','死亡','离开','远去','sad','cry','tears','pain','lonely','alone','grief','sorrow','melancholy','depressed','down','blue','heartbroken','miss','lost','goodbye','farewell','empty','void','dark','gloomy','mourn','weep','sob','whimper'], color:'#3b82f6', name:'悲伤'},
+  fear: {words:['恐惧','害怕','紧张','焦虑','不安','惊慌','恐慌','惊悚','恐怖','诡异','阴森','压迫','窒息','战栗','颤抖','惶恐','惊惧','胆寒','发毛','心悸','担心','忧虑','担忧','可怕','吓人','恐怖','恐惧','害怕','紧张','焦虑','不安','惊慌','恐慌','惊悚','恐怖','诡异','阴森','压迫','窒息','战栗','颤抖','惶恐','惊惧','胆寒','发毛','心悸','担心','忧虑','担忧','可怕','吓人','恐怖','fear','afraid','scared','terrified','panic','anxiety','anxious','nervous','worried','dread','horror','terror','creepy','spooky','haunted','ghost','monster','nightmare','darkness','shadow','threat','danger','alarm','shock','fright','tremble','shake','shiver'], color:'#8b5cf6', name:'恐惧'},
+  anger: {words:['愤怒','生气','恼怒','暴怒','愤慨','怨恨','仇恨','恼火','气愤','怒吼','咆哮','狂暴','焦躁','烦躁','愤懑','愠怒','怒视','咬牙','痛恨','憎恨','厌恶','讨厌','烦','恼火','愤怒','生气','恼怒','暴怒','愤慨','怨恨','仇恨','恼火','气愤','怒吼','咆哮','狂暴','焦躁','烦躁','愤懑','愠怒','怒视','咬牙','痛恨','憎恨','厌恶','讨厌','烦','恼火','angry','mad','furious','rage','wrath','resent','hate','hatred','annoyed','irritated','frustrated','outraged','indignant','bitter','hostile','aggressive','violent','explode','shout','yell','scream','roar','clench','grit','stomp','slam','break','destroy','crush'], color:'#ef4444', name:'愤怒'},
+  calm: {words:['平静','安静','宁静','安宁','祥和','平和','舒缓','从容','淡定','悠然','恬静','静谧','澄净','空灵','悠远','绵长','柔和','温润','恬淡','安然','放松','安心','舒适','惬意','自在','悠闲','淡然','坦然','自然','平和','平静','安静','宁静','安宁','祥和','平和','舒缓','从容','淡定','悠然','恬静','静谧','澄净','空灵','悠远','绵长','柔和','温润','恬淡','安然','放松','安心','舒适','惬意','自在','悠闲','淡然','坦然','自然','平和','calm','peaceful','quiet','serene','tranquil','still','gentle','soft','relax','relaxed','easy','comfortable','cozy','content','satisfied','peace','harmony','balance','steady','stable','slow','slowly','breathe','breath','meditate','mindful','zen'], color:'#14b8a6', name:'平静'},
+  surprise: {words:['惊讶','惊奇','震惊','诧异','意外','突然','突兀','怪诞','离奇','神秘','奇幻','魔幻','超现实','迷幻','恍惚','朦胧','模糊','飘渺','虚幻','梦境','惊喜','惊叹','赞叹','神奇','奇妙','不可思议','难以置信','惊讶','惊奇','震惊','诧异','意外','突然','突兀','怪诞','离奇','神秘','奇幻','魔幻','超现实','迷幻','恍惚','朦胧','模糊','飘渺','虚幻','梦境','惊喜','惊叹','赞叹','神奇','奇妙','不可思议','难以置信','surprise','shock','amaze','astonish','wonder','mystery','magical','fantasy','dream','dreamy','ethereal','surreal','mystical','enchanted','spellbound','awe','wow','omg','unbelievable','incredible','unexpected','sudden','abrupt','bizarre','weird','strange','odd','curious','peculiar'], color:'#ec4899', name:'惊奇'}
+};
+
+// 示例文本
+const examples = [
+  '今天阳光明媚，我和朋友们一起去公园野餐。大家笑着闹着，吃着美味的食物，聊着未来的梦想。我感到无比幸福和满足，希望这一刻能够永远持续下去。生活真美好，我爱这个世界。',
+  '窗外下着雨，我一个人坐在房间里，看着泛黄的照片发呆。那些美好的时光已经一去不复返了，留下的只有无尽的思念和遗憾。泪水模糊了我的双眼，心中充满了悲伤和孤独。为什么美好的事物总是那么短暂？',
+  '深夜，我独自走在空无一人的走廊里。灯光忽明忽暗，远处传来奇怪的声响。我的心跳加速，手心冒汗，总觉得有什么东西在黑暗中注视着我。我不敢回头，只能加快脚步，恐惧笼罩着我的全身。',
+  '他竟然又一次欺骗了我！我那么信任他，把所有的秘密都告诉了他，结果他却背叛了我。愤怒像火焰一样在我胸中燃烧，我恨不得立刻冲上去质问他。这种被背叛的感觉太痛苦了，我再也不会相信任何人了。',
+  '清晨，我坐在窗边，看着阳光缓缓洒进房间。泡一杯热茶，听着轻柔的音乐，感受着时光慢慢流淌。没有喧嚣，没有烦恼，只有内心的宁静和安详。这样的日子真好，简单而美好，平静而充实。',
+  '这是一个奇怪的梦。我走在一条没有尽头的走廊里，灯光闪烁不定。突然，一扇门出现在我面前，我推开门，发现自己回到了小时候的学校。但一切都扭曲变形了，同学们的脸模糊不清。我感到既惊奇又恐惧，想要逃离却找不到出口。'
+];
+
+let currentEmotions = {joy:0, sadness:0, fear:0, anger:0, calm:0, surprise:0};
+let particles = [];
+let animationId = null;
+
+// Canvas设置
+const particleCanvas = document.getElementById('particleCanvas');
+const pCtx = particleCanvas.getContext('2d');
+const radarCanvas = document.getElementById('radarCanvas');
+const rCtx = radarCanvas.getContext('2d');
+
+function resizeCanvas(){
+  const wrap = document.querySelector('.viz-wrap');
+  particleCanvas.width = wrap.clientWidth;
+  particleCanvas.height = wrap.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// 粒子类
+class Particle {
+  constructor(x, y, color, speed, size){
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random()-0.5) * speed;
+    this.vy = (Math.random()-0.5) * speed;
+    this.size = size;
+    this.color = color;
+    this.life = 1;
+    this.decay = Math.random()*0.005 + 0.002;
+    this.angle = Math.random()*Math.PI*2;
+    this.flowSpeed = Math.random()*0.02 + 0.005;
+  }
+  update(flowX, flowY){
+    this.angle += this.flowSpeed;
+    this.x += this.vx + Math.cos(this.angle)*flowX;
+    this.y += this.vy + Math.sin(this.angle)*flowY;
+    this.life -= this.decay;
+    if(this.x < 0) this.x = particleCanvas.width;
+    if(this.x > particleCanvas.width) this.x = 0;
+    if(this.y < 0) this.y = particleCanvas.height;
+    if(this.y > particleCanvas.height) this.y = 0;
+  }
+  draw(ctx){
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+    ctx.fillStyle = this.color.replace('1)', `${this.life*0.7})`);
+    ctx.fill();
+  }
+}
+
+// 分析文本
+function analyzeText(){
+  const text = document.getElementById('textInput').value;
+  
+  // 统计
+  const chars = text.length;
+  const sentences = text.split(/[。！？.!?\n]/).filter(s=>s.trim()).length;
+  const words = text.split(/[\s,，。、！？!?;；:：]/).filter(w=>w.trim()).length;
+  
+  document.getElementById('charCount').textContent = chars;
+  document.getElementById('sentenceCount').textContent = sentences;
+  document.getElementById('wordCount').textContent = words;
+  
+  if(!text.trim()){
+    currentEmotions = {joy:0, sadness:0, fear:0, anger:0, calm:0, surprise:0};
+    updateUI();
+    return;
+  }
+  
+  // 分析情绪
+  const emotions = {joy:0, sadness:0, fear:0, anger:0, calm:0, surprise:0};
+  const keywordCounts = {};
+  
+  Object.keys(emotionDict).forEach(key=>{
+    emotionDict[key].words.forEach(word=>{
+      const regex = new RegExp(word, 'gi');
+      const matches = text.match(regex);
+      if(matches){
+        emotions[key] += matches.length;
+        if(!keywordCounts[word]) keywordCounts[word] = 0;
+        keywordCounts[word] += matches.length;
+      }
+    });
+  });
+  
+  // 归一化
+  const max = Math.max(...Object.values(emotions), 1);
+  Object.keys(emotions).forEach(key=>{
+    emotions[key] = Math.round((emotions[key]/max)*100);
+  });
+  
+  currentEmotions = emotions;
+  
+  // 主导情绪
+  const dominant = Object.keys(emotions).reduce((a,b)=>emotions[a]>emotions[b]?a:b);
+  document.getElementById('dominantEmotion').textContent = emotionDict[dominant].name;
+  document.getElementById('dominantEmotion').style.color = emotionDict[dominant].color;
+  
+  updateUI();
+  updateParticles();
+  renderRadar();
+  renderKeywords(keywordCounts);
+}
+
+// 更新UI
+function updateUI(){
+  // 情绪条
+  const container = document.getElementById('emotionBars');
+  container.innerHTML = Object.keys(currentEmotions).map(key=>{
+    const config = emotionDict[key];
+    return `
+      <div class="emotion-item">
+        <div class="emotion-label">
+          <span class="emotion-name">
+            <span class="emotion-dot" style="background:${config.color}"></span>
+            ${config.name}
+          </span>
+          <span class="emotion-value">${currentEmotions[key]}%</span>
+        </div>
+        <div class="emotion-bar">
+          <div class="emotion-fill" style="background:${config.color};width:${currentEmotions[key]}%"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // 可视化信息
+  const dominant = Object.keys(currentEmotions).reduce((a,b)=>currentEmotions[a]>currentEmotions[b]?a:b);
+  const config = emotionDict[dominant];
+  const moodEl = document.getElementById('vizMood');
+  moodEl.textContent = config.name;
+  moodEl.style.color = config.color;
+  document.getElementById('vizDesc').textContent = `情绪得分：${currentEmotions[dominant]}%`;
+}
+
+// 更新粒子
+function updateParticles(){
+  particles = [];
+  const particleCount = 200;
+  
+  for(let i=0;i<particleCount;i++){
+    // 根据情绪分布选择颜色
+    const rand = Math.random()*100;
+    let cumulative = 0;
+    let selectedKey = 'calm';
+    for(const key of Object.keys(currentEmotions)){
+      cumulative += currentEmotions[key];
+      if(rand <= cumulative){
+        selectedKey = key;
+        break;
+      }
+    }
+    
+    const config = emotionDict[selectedKey];
+    const speed = 0.5 + (currentEmotions[selectedKey]/100)*3;
+    const size = 2 + Math.random()*4;
+    
+    particles.push(new Particle(
+      Math.random()*particleCanvas.width,
+      Math.random()*particleCanvas.height,
+      config.color + '1)',
+      speed,
+      size
+    ));
+  }
+}
+
+// 动画循环
+function animate(){
+  pCtx.fillStyle = 'rgba(5,5,15,0.08)';
+  pCtx.fillRect(0,0,particleCanvas.width,particleCanvas.height);
+  
+  // 计算流场
+  let flowX = 0, flowY = 0;
+  flowX += (currentEmotions.joy - currentEmotions.sadness) * 0.01;
+  flowY += (currentEmotions.fear - currentEmotions.calm) * 0.01;
+  
+  particles = particles.filter(p=>p.life > 0);
+  particles.forEach(p=>{
+    p.update(flowX, flowY);
+    p.draw(pCtx);
+  });
+  
+  // 补充粒子
+  if(particles.length < 150){
+    const rand = Math.random()*100;
+    let cumulative = 0;
+    let selectedKey = 'calm';
+    for(const key of Object.keys(currentEmotions)){
+      cumulative += currentEmotions[key];
+      if(rand <= cumulative){
+        selectedKey = key;
+        break;
+      }
+    }
+    const config = emotionDict[selectedKey];
+    particles.push(new Particle(
+      Math.random()*particleCanvas.width,
+      Math.random()*particleCanvas.height,
+      config.color + '1)',
+      0.5 + Math.random()*2,
+      2 + Math.random()*4
+    ));
+  }
+  
+  animationId = requestAnimationFrame(animate);
+}
+
+// 渲染雷达图
+function renderRadar(){
+  const cx = 110, cy = 110, radius = 80;
+  const emotions = Object.keys(currentEmotions);
+  const n = emotions.length;
+  
+  rCtx.clearRect(0,0,220,220);
+  
+  // 绘制网格
+  for(let level=1; level<=4; level++){
+    rCtx.beginPath();
+    for(let i=0;i<n;i++){
+      const angle = (Math.PI*2/n)*i - Math.PI/2;
+      const r = (radius/4)*level;
+      const x = cx + Math.cos(angle)*r;
+      const y = cy + Math.sin(angle)*r;
+      if(i===0) rCtx.moveTo(x,y);
+      else rCtx.lineTo(x,y);
+    }
+    rCtx.closePath();
+    rCtx.strokeStyle = 'rgba(100,100,160,0.15)';
+    rCtx.lineWidth = 1;
+    rCtx.stroke();
+  }
+  
+  // 绘制轴线
+  for(let i=0;i<n;i++){
+    const angle = (Math.PI*2/n)*i - Math.PI/2;
+    const x = cx + Math.cos(angle)*radius;
+    const y = cy + Math.sin(angle)*radius;
+    rCtx.beginPath();
+    rCtx.moveTo(cx,cy);
+    rCtx.lineTo(x,y);
+    rCtx.strokeStyle = 'rgba(100,100,160,0.2)';
+    rCtx.stroke();
+    
+    // 标签
+    const labelX = cx + Math.cos(angle)*(radius+15);
+    const labelY = cy + Math.sin(angle)*(radius+15);
+    rCtx.fillStyle = emotionDict[emotions[i]].color;
+    rCtx.font = '11px sans-serif';
+    rCtx.textAlign = 'center';
+    rCtx.textBaseline = 'middle';
+    rCtx.fillText(emotionDict[emotions[i]].name, labelX, labelY);
+  }
+  
+  // 绘制数据
+  rCtx.beginPath();
+  for(let i=0;i<n;i++){
+    const angle = (Math.PI*2/n)*i - Math.PI/2;
+    const value = currentEmotions[emotions[i]]/100;
+    const r = radius * value;
+    const x = cx + Math.cos(angle)*r;
+    const y = cy + Math.sin(angle)*r;
+    if(i===0) rCtx.moveTo(x,y);
+    else rCtx.lineTo(x,y);
+  }
+  rCtx.closePath();
+  rCtx.fillStyle = 'rgba(139,92,246,0.2)';
+  rCtx.fill();
+  rCtx.strokeStyle = '#8b5cf6';
+  rCtx.lineWidth = 2;
+  rCtx.stroke();
+  
+  // 绘制数据点
+  for(let i=0;i<n;i++){
+    const angle = (Math.PI*2/n)*i - Math.PI/2;
+    const value = currentEmotions[emotions[i]]/100;
+    const r = radius * value;
+    const x = cx + Math.cos(angle)*r;
+    const y = cy + Math.sin(angle)*r;
+    rCtx.beginPath();
+    rCtx.arc(x,y,4,0,Math.PI*2);
+    rCtx.fillStyle = emotionDict[emotions[i]].color;
+    rCtx.fill();
+  }
+}
+
+// 渲染关键词
+function renderKeywords(keywordCounts){
+  const container = document.getElementById('keywordsWrap');
+  const sorted = Object.entries(keywordCounts).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  
+  if(sorted.length === 0){
+    container.innerHTML = '<span style="font-size:12px;color:var(--text-muted);align-self:center">未检测到明显情绪关键词</span>';
+    return;
+  }
+  
+  container.innerHTML = sorted.map(([word, count])=>{
+    // 根据关键词找到对应的情绪颜色
+    let color = '#8b5cf6';
+    for(const key of Object.keys(emotionDict)){
+      if(emotionDict[key].words.includes(word.toLowerCase()) || emotionDict[key].words.includes(word)){
+        color = emotionDict[key].color;
+        break;
+      }
+    }
+    const opacity = 0.1 + (count/5)*0.2;
+    return `<span class="keyword-chip" style="background:${color}${Math.round(opacity*255).toString(16).padStart(2,'0')};color:${color};border:1px solid ${color}40">${word} ×${count}</span>`;
+  }).join('');
+}
+
+// 加载示例
+function loadExample(index){
+  document.getElementById('textInput').value = examples[index];
+  analyzeText();
+}
+
+// 清空
+function clearText(){
+  document.getElementById('textInput').value = '';
+  currentEmotions = {joy:0, sadness:0, fear:0, anger:0, calm:0, surprise:0};
+  document.getElementById('charCount').textContent = '0';
+  document.getElementById('sentenceCount').textContent = '0';
+  document.getElementById('wordCount').textContent = '0';
+  document.getElementById('dominantEmotion').textContent = '-';
+  document.getElementById('dominantEmotion').style.color = '';
+  updateUI();
+  renderRadar();
+  document.getElementById('keywordsWrap').innerHTML = '<span style="font-size:12px;color:var(--text-muted);align-self:center">输入文本后显示关键词</span>';
+}
+
+// 导出图片
+function exportImage(){
+  // 创建一个组合canvas
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = particleCanvas.width;
+  exportCanvas.height = particleCanvas.height + 100;
+  const ctx = exportCanvas.getContext('2d');
+  
+  // 背景
+  ctx.fillStyle = '#0f0f1a';
+  ctx.fillRect(0,0,exportCanvas.width,exportCanvas.height);
+  
+  // 粒子图
+  ctx.drawImage(particleCanvas, 0, 0);
+  
+  // 标题
+  ctx.fillStyle = '#e8e8f0';
+  ctx.font = 'bold 20px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('文本情绪可视化分析', exportCanvas.width/2, particleCanvas.height + 35);
+  
+  // 情绪得分
+  const dominant = Object.keys(currentEmotions).reduce((a,b)=>currentEmotions[a]>currentEmotions[b]?a:b);
+  ctx.fillStyle = emotionDict[dominant].color;
+  ctx.font = '14px sans-serif';
+  ctx.fillText(`主导情绪：${emotionDict[dominant].name} (${currentEmotions[dominant]}%)`, exportCanvas.width/2, particleCanvas.height + 60);
+  
+  // 下载
+  const link = document.createElement('a');
+  link.download = `情绪可视化_${Date.now()}.png`;
+  link.href = exportCanvas.toDataURL('image/png');
+  link.click();
+}
+
+// 初始化
+currentEmotions = {joy:15, sadness:10, fear:10, anger:5, calm:60, surprise:20};
+updateUI();
+updateParticles();
+renderRadar();
+animate();
+</script>
+</body>
+</html>

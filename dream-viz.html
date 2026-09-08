@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>梦境可视化 | 若颜的梦境日志</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-deep:#0a0a14;
+  --bg-mid:#12121f;
+  --card:rgba(20,20,35,0.7);
+  --card-border:rgba(100,100,160,0.2);
+  --text-primary:#e8e8f0;
+  --text-secondary:#9090a8;
+  --text-muted:#606078;
+  --accent-purple:#8b5cf6;
+  --accent-blue:#3b82f6;
+  --accent-pink:#ec4899;
+  --accent-teal:#14b8a6;
+  --accent-amber:#f59e0b;
+}
+body{
+  font-family:'Georgia','Noto Serif SC',serif;
+  background:var(--bg-deep);
+  color:var(--text-primary);
+  min-height:100vh;
+  overflow:hidden;
+}
+#starfield{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  z-index:0;
+}
+.container{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:380px 1fr;
+  height:100vh;
+  gap:0;
+}
+/* 左侧面板 */
+.panel{
+  background:var(--card);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-right:1px solid var(--card-border);
+  padding:28px 24px;
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+}
+.panel-header{
+  margin-bottom:24px;
+}
+.panel-title{
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:2px;
+  background:linear-gradient(135deg,var(--accent-purple),var(--accent-pink));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  margin-bottom:6px;
+}
+.panel-subtitle{
+  font-size:12px;
+  color:var(--text-muted);
+  letter-spacing:1px;
+}
+.input-section{
+  margin-bottom:20px;
+}
+.input-label{
+  font-size:13px;
+  color:var(--text-secondary);
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.input-label svg{width:14px;height:14px;fill:var(--accent-purple)}
+textarea{
+  width:100%;
+  min-height:140px;
+  background:rgba(10,10,20,0.6);
+  border:1px solid var(--card-border);
+  border-radius:10px;
+  padding:14px;
+  color:var(--text-primary);
+  font-family:inherit;
+  font-size:14px;
+  line-height:1.7;
+  resize:vertical;
+  outline:none;
+  transition:border-color 0.3s;
+}
+textarea:focus{
+  border-color:var(--accent-purple);
+}
+textarea::placeholder{color:var(--text-muted)}
+.title-input{
+  width:100%;
+  background:rgba(10,10,20,0.6);
+  border:1px solid var(--card-border);
+  border-radius:10px;
+  padding:10px 14px;
+  color:var(--text-primary);
+  font-family:inherit;
+  font-size:14px;
+  outline:none;
+  transition:border-color 0.3s;
+  margin-bottom:12px;
+}
+.title-input:focus{border-color:var(--accent-purple)}
+.btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.3s;
+  font-family:inherit;
+  letter-spacing:1px;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent-purple),var(--accent-pink));
+  color:#fff;
+}
+.btn-primary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 20px rgba(139,92,246,0.4);
+}
+.btn-secondary{
+  background:rgba(100,100,160,0.15);
+  color:var(--text-secondary);
+  border:1px solid var(--card-border);
+}
+.btn-secondary:hover{
+  background:rgba(100,100,160,0.25);
+  color:var(--text-primary);
+}
+.btn-group{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:8px;
+}
+/* 情绪分析结果 */
+.analysis-result{
+  margin-top:20px;
+  padding-top:20px;
+  border-top:1px solid var(--card-border);
+}
+.analysis-title{
+  font-size:13px;
+  color:var(--text-secondary);
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.analysis-title svg{width:14px;height:14px;fill:var(--accent-teal)}
+.emotion-bars{display:flex;flex-direction:column;gap:10px}
+.emotion-row{
+  display:flex;align-items:center;gap:10px;
+}
+.emotion-name{
+  width:50px;
+  font-size:12px;
+  color:var(--text-secondary);
+  flex-shrink:0;
+}
+.emotion-bar-bg{
+  flex:1;
+  height:6px;
+  background:rgba(100,100,160,0.15);
+  border-radius:3px;
+  overflow:hidden;
+}
+.emotion-bar-fill{
+  height:100%;
+  border-radius:3px;
+  transition:width 0.8s ease;
+  width:0%;
+}
+.emotion-value{
+  width:36px;
+  font-size:11px;
+  color:var(--text-muted);
+  text-align:right;
+}
+.keywords-section{
+  margin-top:16px;
+}
+.keywords-title{
+  font-size:12px;
+  color:var(--text-muted);
+  margin-bottom:8px;
+}
+.keywords-tags{
+  display:flex;flex-wrap:wrap;gap:6px;
+}
+.keyword-tag{
+  padding:4px 10px;
+  background:rgba(139,92,246,0.15);
+  border:1px solid rgba(139,92,246,0.3);
+  border-radius:12px;
+  font-size:11px;
+  color:var(--accent-purple);
+}
+/* 历史记录 */
+.history-section{
+  margin-top:20px;
+  padding-top:20px;
+  border-top:1px solid var(--card-border);
+  flex:1;
+  overflow-y:auto;
+}
+.history-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+}
+.history-title{
+  font-size:13px;
+  color:var(--text-secondary);
+  display:flex;align-items:center;gap:6px;
+}
+.history-title svg{width:14px;height:14px;fill:var(--accent-amber)}
+.clear-history{
+  background:none;border:none;
+  font-size:11px;color:var(--text-muted);
+  cursor:pointer;padding:4px 8px;border-radius:6px;
+}
+.clear-history:hover{color:var(--accent-pink);background:rgba(236,72,153,0.1)}
+.history-list{display:flex;flex-direction:column;gap:8px}
+.history-item{
+  padding:10px 12px;
+  background:rgba(10,10,20,0.4);
+  border:1px solid var(--card-border);
+  border-radius:8px;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.history-item:hover{
+  border-color:var(--accent-purple);
+  background:rgba(139,92,246,0.1);
+}
+.history-item-title{
+  font-size:13px;
+  color:var(--text-primary);
+  margin-bottom:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.history-item-meta{
+  font-size:10px;
+  color:var(--text-muted);
+  display:flex;justify-content:space-between;
+}
+.history-empty{
+  font-size:12px;
+  color:var(--text-muted);
+  text-align:center;
+  padding:20px;
+}
+/* 右侧可视化区域 */
+.viz-area{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+#vizCanvas{
+  flex:1;
+  width:100%;
+}
+.viz-overlay{
+  position:absolute;
+  top:24px;left:24px;
+  z-index:2;
+  pointer-events:none;
+}
+.viz-dream-title{
+  font-size:28px;
+  font-weight:700;
+  color:var(--text-primary);
+  margin-bottom:8px;
+  opacity:0.9;
+  text-shadow:0 2px 20px rgba(0,0,0,0.5);
+}
+.viz-dream-mood{
+  font-size:14px;
+  color:var(--text-secondary);
+  letter-spacing:2px;
+}
+.viz-controls{
+  position:absolute;
+  bottom:24px;right:24px;
+  z-index:2;
+  display:flex;gap:8px;
+}
+.viz-btn{
+  width:44px;height:44px;
+  background:var(--card);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--card-border);
+  border-radius:10px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.viz-btn:hover{
+  border-color:var(--accent-purple);
+  background:rgba(139,92,246,0.2);
+}
+.viz-btn svg{width:18px;height:18px;fill:var(--text-secondary)}
+.viz-btn:hover svg{fill:var(--accent-purple)}
+/* 导航链接 */
+.nav-links{
+  position:absolute;
+  top:24px;right:24px;
+  z-index:2;
+  display:flex;gap:12px;
+}
+.nav-links a{
+  color:var(--text-muted);
+  text-decoration:none;
+  font-size:12px;
+  letter-spacing:1px;
+  padding:6px 12px;
+  border-radius:6px;
+  transition:all 0.2s;
+  font-family:sans-serif;
+}
+.nav-links a:hover{
+  color:var(--text-primary);
+  background:rgba(255,255,255,0.05);
+}
+/* 响应式 */
+@media(max-width:900px){
+  .container{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .panel{max-height:50vh;border-right:none;border-bottom:1px solid var(--card-border)}
+  .viz-area{min-height:400px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<div class="container">
+  <!-- 左侧面板 -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">梦境可视化</div>
+      <div class="panel-subtitle">DREAM VISUALIZATION</div>
+    </div>
+
+    <div class="input-section">
+      <div class="input-label">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        梦境标题
+      </div>
+      <input type="text" class="title-input" id="dreamTitle" placeholder="给这个梦起个名字...">
+      
+      <div class="input-label" style="margin-top:12px">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        梦境内容
+      </div>
+      <textarea id="dreamText" placeholder="描述你的梦境...&#10;&#10;例如：我走在一条没有尽头的走廊里，灯光闪烁不定，远处传来模糊的声音。我推开门，发现自己回到了小时候的学校，但一切都扭曲变形了..."></textarea>
+    </div>
+
+    <button class="btn btn-primary" onclick="visualizeDream()">生成梦境可视化</button>
+    
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="saveDream()">保存梦境</button>
+      <button class="btn btn-secondary" onclick="clearInput()">清空</button>
+    </div>
+
+    <!-- 情绪分析结果 -->
+    <div class="analysis-result" id="analysisResult" style="display:none">
+      <div class="analysis-title">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        情绪分析
+      </div>
+      <div class="emotion-bars" id="emotionBars"></div>
+      <div class="keywords-section">
+        <div class="keywords-title">提取的梦境符号</div>
+        <div class="keywords-tags" id="keywordsTags"></div>
+      </div>
+    </div>
+
+    <!-- 历史记录 -->
+    <div class="history-section">
+      <div class="history-header">
+        <div class="history-title">
+          <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+          梦境记录
+        </div>
+        <button class="clear-history" onclick="clearHistory()">清空</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">暂无梦境记录</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧可视化 -->
+  <div class="viz-area">
+    <div class="nav-links">
+      <a href="index.html">博客首页</a>
+      <a href="emotion-viz.html">情绪分析</a>
+    </div>
+    <div class="viz-overlay">
+      <div class="viz-dream-title" id="vizTitle">等待梦境输入</div>
+      <div class="viz-dream-mood" id="vizMood">输入你的梦境，生成专属可视化</div>
+    </div>
+    <canvas id="vizCanvas"></canvas>
+    <div class="viz-controls">
+      <button class="viz-btn" onclick="exportImage()" title="导出图片">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      </button>
+      <button class="viz-btn" onclick="regenerate()" title="重新生成">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 情绪关键词词典
+const emotionDict = {
+  joy: {words:['开心','快乐','高兴','喜悦','兴奋','激动','满足','幸福','温暖','美好','微笑','欢笑','轻松','愉快','欣喜','欢畅','舒畅','甜美','温馨','治愈'], weight:1},
+  sadness: {words:['悲伤','难过','伤心','哭泣','流泪','痛苦','失落','孤独','寂寞','绝望','沮丧','忧郁','忧伤','哀愁','悲戚','心酸','心碎','凄凉','孤寂','落寞'], weight:1},
+  fear: {words:['恐惧','害怕','紧张','焦虑','不安','惊慌','恐慌','惊悚','恐怖','诡异','阴森','压迫','窒息','战栗','颤抖','惶恐','惊惧','胆寒','发毛','心悸'], weight:1},
+  anger: {words:['愤怒','生气','恼怒','暴怒','愤慨','怨恨','仇恨','恼火','气愤','暴怒','怒吼','咆哮','狂暴','焦躁','烦躁','暴怒','愤懑','愠怒','怒视','咬牙'], weight:1},
+  calm: {words:['平静','安静','宁静','安宁','祥和','平和','舒缓','从容','淡定','悠然','恬静','静谧','澄净','空灵','悠远','绵长','柔和','温润','恬淡','安然'], weight:1},
+  surprise: {words:['惊讶','惊奇','震惊','诧异','意外','突然','突兀','怪诞','离奇','神秘','奇幻','魔幻','超现实','迷幻','恍惚','朦胧','模糊','飘渺','虚幻','梦境'], weight:1}
+};
+
+// 梦境符号词典
+const dreamSymbols = ['走廊','房间','门','窗户','楼梯','水','火','天空','云','树','花','动物','人','影子','光','黑暗','镜子','钟表','学校','家','路','车','船','山','海','雨','雪','风','星星','月亮','太阳','城市','废墟','花园','森林','沙漠','岛屿','桥','塔','城堡','洞穴','深渊','迷宫','剧场','教室','办公室','医院','车站','机场','商店','餐厅','图书馆','博物馆','公园','广场','街道','巷子','屋顶','地下室','阁楼','阳台','庭院','菜园','麦田','稻田','草原','瀑布','河流','湖泊','海洋','潮汐','波浪','漩涡','泡沫','冰晶','雪花','雨滴','露珠','雾气','雾霾','烟尘','灰烬','火焰','火花','烟花','闪电','雷声','风声','水声','钟声','铃声','歌声','笑声','哭声','喊声','沉默','寂静','回声','余韵','记忆','回忆','遗忘','消失','出现','追寻','逃离','等待','相遇','离别','重逢','告别','开始','结束','轮回','循环','无限','永恒','瞬间','刹那','时光','岁月','过去','未来','现在','童年','青春','衰老','死亡','重生','觉醒','沉睡','梦境','清醒','幻觉','真实','虚假','真相','秘密','谜题','答案','选择','决定','犹豫','坚定','迷茫','困惑','领悟','顿悟','超脱','束缚','自由','牢笼','翅膀','飞翔','坠落','上升','下沉','漂浮','沉没','游泳','潜水','奔跑','行走','停留','后退','前进','转弯','直走','岔路','尽头','起点','终点','方向','目标','旅程','冒险','探索','发现','隐藏','显现','打开','关闭','进入','离开','穿越','跨越','突破','阻碍','障碍','困难','挑战','考验','试炼','洗礼','蜕变','变化','转化','变形','变身','异化','扭曲','变形','旋转','翻转','颠倒','倒置','混乱','秩序','平衡','失衡','对称','不对称','重复','唯一','相似','不同','相同','差异','对比','反差','融合','分离','结合','分裂','统一','多元','单一','复杂','简单','纯粹','混杂','清澈','浑浊','透明','模糊','清晰','明亮','昏暗','黑暗','光明','阴影','影子','倒影','镜像','反射','折射','衍射','散射','聚焦','散焦','虚化','实化','立体','平面','三维','二维','一维','零维','空间','时间','维度','次元','宇宙','世界','星球','地球','月球','火星','星系','银河','星云','星尘','流星','彗星','行星','恒星','黑洞','白洞','虫洞','时空','光速','超光速','引力','重力','失重','漂浮','悬浮','飞行','翱翔','盘旋','环绕','围绕','中心','边缘','边界','界限','极限','无限','无穷','永恒','瞬间','刹那','须臾','片刻','长久','永远','短暂','转瞬','即逝','消逝','消失','消亡','灭亡','死亡','寂灭','涅槃','重生','复活','轮回','转世','投胎','前世','今生','来世','过去','现在','未来','曾经','已经','正在','将要','即将','终于','最终','最后','最初','开始','结束','终止','停止','继续','延续','中断','打断','连接','衔接','断裂','破碎','完整','完美','缺陷','瑕疵','裂痕','裂缝','缝隙','间隙','间隔','距离','远近','靠近','远离','接近','抵达','到达','离开','离去','告别','再见','永别','离别','分别','分离','分开','聚合','聚集','集合','集中','分散','散开','扩散','弥漫','充满','空虚','空白','虚无','存在','不存在','有','无','空','色','相','法','道','禅','佛','儒','道','墨','法','术','技','艺','文','武','琴','棋','书','画','诗','词','歌','赋','曲','调','韵','律','声','音','响','静','默','言','语','话','说','讲','谈','聊','问','答','回','应','和','唱','随','附','从','顺','逆','反','正','邪','善','恶','美','丑','真','假','对','错','是','非','好','坏','优','劣','高','低','大','小','多','少','长','短','宽','窄','厚','薄','深','浅','重','轻','快','慢','急','缓','强','弱','硬','软','冷','热','温','凉','冰','火','水','土','金','木','风','雷','电','雨','雪','霜','露','雾','云','霞','虹','日','月','星','天','地','山','河','湖','海','洋','岛','滩','岸','堤','坝','桥','路','街','巷','道','径','途','程','旅','行','走','跑','跳','飞','游','爬','攀','登','降','落','升','起','伏','沉','浮','飘','荡','摇','摆','晃','颤','抖','震','动','静','止','停','留','存','在','是','为','乃','则','即','若','如','似','像','类','同','异','别','差','殊','特','奇','怪','异','常','凡','俗','雅','高','低','贵','贱','尊','卑','上','下','左','右','前','后','里','外','内','中','间','旁','侧','边','角','尖','圆','方','直','曲','弯','折','转','旋','环','绕','围','包','裹','藏','掩','遮','盖','覆','压','顶','托','举','抬','扛','背','抱','搂','拥','握','抓','拿','取','放','置','摆','排','列','堆','叠','摞','串','连','接','绑','捆','扎','系','结','扣','锁','栓','链','环','圈','轮','盘','碟','碗','杯','瓶','罐','桶','盆','缸','坛','瓮','瓢','勺','筷','刀','叉','剑','戟','戈','矛','盾','甲','盔','弓','箭','弩','枪','炮','弹','药','火','光','影','音','声','色','香','味','触','感','知','觉','思','想','念','忆','记','忘','失','得','获','取','予','给','送','传','递','交','接','收','放','拾','捡','丢','扔','抛','投','掷','甩','挥','舞','摆','摇','晃','颤','抖','震','动','跳','跃','蹦','跑','奔','驰','骋','飞','翔','翱','游','泳','潜','浮','沉','降','落','升','起','伏','翻','滚','爬','攀','登','爬','跪','坐','站','立','躺','卧','趴','蹲','靠','倚','傍','依','附','贴','粘','连','接','合','并','融','汇','聚','集','合','分','离','散','开','张','闭','合','启','封','锁','开','关','通','堵','塞','满','空','虚','实','真','假','虚','伪','诚','信','疑','惑','迷','悟','醒','睡','梦','幻','觉','知','感','受','体','验','经','历','体','会','领','悟','参','透','看','见','观','察','视','听','闻','嗅','尝','触','摸','碰','撞','击','打','敲','拍','推','拉','拽','拖','提','拎','扛','背','抱','搂','拥','握','抓','捏','掐','拧','揉','搓','擦','抹','涂','画','写','描','绘','刻','雕','塑','铸','锻','炼','冶','熔','融','凝','固','结','晶','冰','霜','雪','雨','露','雾','云','霞','虹','日','月','星','天','地','山','河','湖','海','洋','岛','滩','岸','堤','坝','桥','路','街','巷','道','径','途','程','旅','行','走','跑','跳','飞','游','爬','攀','登','降','落','升','起','伏','沉','浮','飘','荡','摇','摆','晃','颤','抖','震','动','静','止','停','留','存','在','是','为','乃','则','即','若','如','似','像','类','同','异','别','差','殊','特','奇','怪','异','常','凡','俗','雅','高','低','贵','贱','尊','卑','上','下','左','右','前','后','里','外','内','中','间','旁','侧','边','角','尖','圆','方','直','曲','弯','折','转','旋','环','绕','围','包','裹','藏','掩','遮','盖','覆','压','顶','托','举','抬','扛','背','抱','搂','拥','握','抓','拿','取','放','置','摆','排','列','堆','叠','摞','串','连','接','绑','捆','扎','系','结','扣','锁','栓','链','环','圈','轮','盘','碟','碗','杯','瓶','罐','桶','盆','缸','坛','瓮','瓢','勺','筷','刀','叉','剑','戟','戈','矛','盾','甲','盔','弓','箭','弩','枪','炮','弹','药','火','光','影','音','声','色','香','味','触','感','知','觉','思','想','念','忆','记','忘','失','得','获','取','予','给','送','传','递','交','接','收','放','拾','捡','丢','扔','抛','投','掷','甩','挥','舞','摆','摇','晃','颤','抖','震','动','跳','跃','蹦','跑','奔','驰','骋','飞','翔','翱','游','泳','潜','浮','沉','降','落','升','起','伏','翻','滚','爬','攀','登','爬','跪','坐','站','立','躺','卧','趴','蹲','靠','倚','傍','依','附','贴','粘','连','接','合','并','融','汇','聚','集','合','分','离','散','开','张','闭','合','启','封','锁','开','关','通','堵','塞','满','空','虚','实','真','假','虚','伪','诚','信','疑','惑','迷','悟','醒','睡','梦','幻','觉','知','感','受','体','验','经','历','体','会','领','悟','参','透','看','见','观','察','视','听','闻','嗅','尝','触','摸','碰','撞','击','打','敲','拍','推','拉','拽','拖','提','拎','扛','背','抱','搂','拥','握','抓','捏','掐','拧','揉','搓','擦','抹','涂','画','写','描','绘','刻','雕','塑','铸','锻','炼','冶','熔','融','凝','固','结','晶','冰','霜','雪','雨','露','雾','云','霞','虹','日','月','星','天','地','山','河','湖','海','洋','岛','滩','岸','堤','坝','桥','路','街','巷','道','径','途','程','旅','行'];
+
+// 情绪配置
+const emotionConfig = {
+  joy: {color:'#f59e0b', name:'喜悦', particleSpeed:2, particleSize:4, flow:0.02},
+  sadness: {color:'#3b82f6', name:'悲伤', particleSpeed:0.5, particleSize:6, flow:-0.01},
+  fear: {color:'#8b5cf6', name:'恐惧', particleSpeed:3, particleSize:3, flow:0.05},
+  anger: {color:'#ef4444', name:'愤怒', particleSpeed:4, particleSize:5, flow:-0.04},
+  calm: {color:'#14b8a6', name:'平静', particleSpeed:0.8, particleSize:5, flow:0.005},
+  surprise: {color:'#ec4899', name:'惊奇', particleSpeed:2.5, particleSize:4, flow:0.03}
+};
+
+let currentEmotions = {joy:0, sadness:0, fear:0, anger:0, calm:0, surprise:0};
+let currentSymbols = [];
+let particles = [];
+let shapes = [];
+let animationId = null;
+let dreams = JSON.parse(localStorage.getItem('dreamJournal') || '[]');
+
+// Canvas设置
+const starCanvas = document.getElementById('starfield');
+const starCtx = starCanvas.getContext('2d');
+const vizCanvas = document.getElementById('vizCanvas');
+const vizCtx = vizCanvas.getContext('2d');
+
+function resizeCanvases(){
+  starCanvas.width = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+  const vizArea = document.querySelector('.viz-area');
+  vizCanvas.width = vizArea.clientWidth;
+  vizCanvas.height = vizArea.clientHeight;
+}
+window.addEventListener('resize', resizeCanvases);
+resizeCanvases();
+
+// 星空背景
+let stars = [];
+for(let i=0;i<200;i++){
+  stars.push({
+    x:Math.random()*starCanvas.width,
+    y:Math.random()*starCanvas.height,
+    size:Math.random()*1.5,
+    opacity:Math.random()*0.8+0.2,
+    twinkleSpeed:Math.random()*0.02+0.005
+  });
+}
+
+function drawStarfield(){
+  starCtx.fillStyle = '#0a0a14';
+  starCtx.fillRect(0,0,starCanvas.width,starCanvas.height);
+  stars.forEach(star=>{
+    star.opacity += Math.sin(Date.now()*star.twinkleSpeed)*0.01;
+    star.opacity = Math.max(0.1, Math.min(1, star.opacity));
+    starCtx.beginPath();
+    starCtx.arc(star.x, star.y, star.size, 0, Math.PI*2);
+    starCtx.fillStyle = `rgba(255,255,255,${star.opacity})`;
+    starCtx.fill();
+  });
+  requestAnimationFrame(drawStarfield);
+}
+drawStarfield();
+
+// 分析情绪
+function analyzeEmotions(text){
+  const emotions = {joy:0, sadness:0, fear:0, anger:0, calm:0, surprise:0};
+  const symbols = [];
+  const totalWords = text.length || 1;
+  
+  Object.keys(emotionDict).forEach(emotion=>{
+    emotionDict[emotion].words.forEach(word=>{
+      const regex = new RegExp(word, 'g');
+      const matches = text.match(regex);
+      if(matches){
+        emotions[emotion] += matches.length;
+      }
+    });
+  });
+  
+  // 提取梦境符号
+  dreamSymbols.forEach(symbol=>{
+    if(text.includes(symbol) && !symbols.includes(symbol)){
+      symbols.push(symbol);
+    }
+  });
+  
+  // 归一化
+  const max = Math.max(...Object.values(emotions), 1);
+  Object.keys(emotions).forEach(key=>{
+    emotions[key] = Math.round((emotions[key]/max)*100);
+  });
+  
+  return {emotions, symbols:symbols.slice(0,12)};
+}
+
+// 渲染情绪条
+function renderEmotionBars(emotions){
+  const container = document.getElementById('emotionBars');
+  container.innerHTML = Object.keys(emotions).map(key=>{
+    const config = emotionConfig[key];
+    return `
+      <div class="emotion-row">
+        <span class="emotion-name">${config.name}</span>
+        <div class="emotion-bar-bg">
+          <div class="emotion-bar-fill" style="background:${config.color};width:${emotions[key]}%"></div>
+        </div>
+        <span class="emotion-value">${emotions[key]}%</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// 渲染关键词
+function renderKeywords(symbols){
+  const container = document.getElementById('keywordsTags');
+  if(symbols.length === 0){
+    container.innerHTML = '<span style="font-size:11px;color:var(--text-muted)">未提取到明显符号</span>';
+    return;
+  }
+  container.innerHTML = symbols.map(s=>`<span class="keyword-tag">${s}</span>`).join('');
+}
+
+// 粒子类
+class Particle {
+  constructor(x, y, emotion, color){
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random()-0.5) * emotion.particleSpeed;
+    this.vy = (Math.random()-0.5) * emotion.particleSpeed;
+    this.size = emotion.particleSize + Math.random()*3;
+    this.color = color;
+    this.life = 1;
+    this.decay = Math.random()*0.005 + 0.002;
+    this.angle = Math.random()*Math.PI*2;
+    this.flowOffset = Math.random()*1000;
+  }
+  update(flowStrength){
+    this.angle += flowStrength;
+    this.x += this.vx + Math.cos(this.angle)*0.5;
+    this.y += this.vy + Math.sin(this.angle)*0.5;
+    this.life -= this.decay;
+    if(this.x < 0) this.x = vizCanvas.width;
+    if(this.x > vizCanvas.width) this.x = 0;
+    if(this.y < 0) this.y = vizCanvas.height;
+    if(this.y > vizCanvas.height) this.y = 0;
+  }
+  draw(ctx){
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+    ctx.fillStyle = this.color.replace('1)', `${this.life*0.6})`);
+    ctx.fill();
+  }
+}
+
+// 浮动形状类
+class FloatingShape {
+  constructor(x, y, color, type){
+    this.x = x;
+    this.y = y;
+    this.size = Math.random()*60 + 20;
+    this.color = color;
+    this.type = type;
+    this.rotation = Math.random()*Math.PI*2;
+    this.rotationSpeed = (Math.random()-0.5)*0.01;
+    this.floatOffset = Math.random()*1000;
+    this.floatSpeed = Math.random()*0.005 + 0.002;
+    this.opacity = Math.random()*0.15 + 0.05;
+  }
+  update(){
+    this.rotation += this.rotationSpeed;
+    this.y += Math.sin(Date.now()*this.floatSpeed + this.floatOffset)*0.3;
+    this.x += Math.cos(Date.now()*this.floatSpeed*0.7 + this.floatOffset)*0.2;
+  }
+  draw(ctx){
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotation);
+    ctx.globalAlpha = this.opacity;
+    ctx.fillStyle = this.color;
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 1;
+    
+    if(this.type === 0){
+      // 圆形
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size/2, 0, Math.PI*2);
+      ctx.fill();
+    }else if(this.type === 1){
+      // 矩形
+      ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+    }else if(this.type === 2){
+      // 三角形
+      ctx.beginPath();
+      ctx.moveTo(0, -this.size/2);
+      ctx.lineTo(this.size/2, this.size/2);
+      ctx.lineTo(-this.size/2, this.size/2);
+      ctx.closePath();
+      ctx.fill();
+    }else{
+      // 圆环
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size/2, 0, Math.PI*2);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+// 生成可视化
+function generateVisualization(emotions, symbols){
+  particles = [];
+  shapes = [];
+  
+  // 计算主色调
+  const dominantEmotion = Object.keys(emotions).reduce((a,b)=>emotions[a]>emotions[b]?a:b);
+  const dominantConfig = emotionConfig[dominantEmotion];
+  
+  // 创建浮动形状
+  const shapeCount = 15;
+  for(let i=0;i<shapeCount;i++){
+    const emotionKey = Object.keys(emotions)[Math.floor(Math.random()*6)];
+    const config = emotionConfig[emotionKey];
+    const shape = new FloatingShape(
+      Math.random()*vizCanvas.width,
+      Math.random()*vizCanvas.height,
+      config.color,
+      Math.floor(Math.random()*4)
+    );
+    shapes.push(shape);
+  }
+  
+  // 创建粒子
+  const particleCount = 150;
+  for(let i=0;i<particleCount;i++){
+    const emotionKey = Object.keys(emotions)[Math.floor(Math.random()*6)];
+    const config = emotionConfig[emotionKey];
+    const particle = new Particle(
+      Math.random()*vizCanvas.width,
+      Math.random()*vizCanvas.height,
+      config,
+      config.color + '1)'
+    );
+    particles.push(particle);
+  }
+  
+  // 更新标题
+  const title = document.getElementById('dreamTitle').value || '未命名梦境';
+  document.getElementById('vizTitle').textContent = title;
+  document.getElementById('vizMood').textContent = `主导情绪：${dominantConfig.name} | 符号：${symbols.length}个`;
+}
+
+// 动画循环
+function animate(){
+  // 半透明背景实现拖尾效果
+  vizCtx.fillStyle = 'rgba(10,10,20,0.05)';
+  vizCtx.fillRect(0,0,vizCanvas.width,vizCanvas.height);
+  
+  // 计算流场强度
+  let flowStrength = 0;
+  Object.keys(currentEmotions).forEach(key=>{
+    flowStrength += currentEmotions[key] * emotionConfig[key].flow / 100;
+  });
+  
+  // 更新和绘制形状
+  shapes.forEach(shape=>{
+    shape.update();
+    shape.draw(vizCtx);
+  });
+  
+  // 更新和绘制粒子
+  particles = particles.filter(p=>p.life > 0);
+  particles.forEach(particle=>{
+    particle.update(flowStrength);
+    particle.draw(vizCtx);
+  });
+  
+  // 补充粒子
+  if(particles.length < 100){
+    const emotionKey = Object.keys(currentEmotions)[Math.floor(Math.random()*6)];
+    const config = emotionConfig[emotionKey];
+    particles.push(new Particle(
+      Math.random()*vizCanvas.width,
+      Math.random()*vizCanvas.height,
+      config,
+      config.color + '1)'
+    ));
+  }
+  
+  animationId = requestAnimationFrame(animate);
+}
+
+// 可视化梦境
+function visualizeDream(){
+  const text = document.getElementById('dreamText').value.trim();
+  if(!text){
+    alert('请输入梦境内容');
+    return;
+  }
+  
+  const result = analyzeEmotions(text);
+  currentEmotions = result.emotions;
+  currentSymbols = result.symbols;
+  
+  // 显示分析结果
+  document.getElementById('analysisResult').style.display = 'block';
+  renderEmotionBars(result.emotions);
+  renderKeywords(result.symbols);
+  
+  // 生成可视化
+  generateVisualization(result.emotions, result.symbols);
+  
+  if(animationId) cancelAnimationFrame(animationId);
+  animate();
+}
+
+// 保存梦境
+function saveDream(){
+  const title = document.getElementById('dreamTitle').value.trim() || '未命名梦境';
+  const text = document.getElementById('dreamText').value.trim();
+  if(!text){
+    alert('请输入梦境内容');
+    return;
+  }
+  
+  const dream = {
+    id: Date.now(),
+    title,
+    text,
+    emotions: currentEmotions,
+    symbols: currentSymbols,
+    date: new Date().toLocaleString('zh-CN')
+  };
+  
+  dreams.unshift(dream);
+  if(dreams.length > 50) dreams = dreams.slice(0,50);
+  localStorage.setItem('dreamJournal', JSON.stringify(dreams));
+  renderHistory();
+  alert('梦境已保存');
+}
+
+// 渲染历史
+function renderHistory(){
+  const container = document.getElementById('historyList');
+  if(dreams.length === 0){
+    container.innerHTML = '<div class="history-empty">暂无梦境记录</div>';
+    return;
+  }
+  container.innerHTML = dreams.map(dream=>`
+    <div class="history-item" onclick="loadDream(${dream.id})">
+      <div class="history-item-title">${dream.title}</div>
+      <div class="history-item-meta">
+        <span>${dream.date}</span>
+        <span>${dream.symbols.length}个符号</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// 加载梦境
+function loadDream(id){
+  const dream = dreams.find(d=>d.id === id);
+  if(!dream) return;
+  document.getElementById('dreamTitle').value = dream.title;
+  document.getElementById('dreamText').value = dream.text;
+  currentEmotions = dream.emotions;
+  currentSymbols = dream.symbols;
+  document.getElementById('analysisResult').style.display = 'block';
+  renderEmotionBars(dream.emotions);
+  renderKeywords(dream.symbols);
+  generateVisualization(dream.emotions, dream.symbols);
+  if(animationId) cancelAnimationFrame(animationId);
+  animate();
+}
+
+// 清空历史
+function clearHistory(){
+  if(confirm('确定要清空所有梦境记录吗？')){
+    dreams = [];
+    localStorage.removeItem('dreamJournal');
+    renderHistory();
+  }
+}
+
+// 清空输入
+function clearInput(){
+  document.getElementById('dreamTitle').value = '';
+  document.getElementById('dreamText').value = '';
+  document.getElementById('analysisResult').style.display = 'none';
+}
+
+// 导出图片
+function exportImage(){
+  const link = document.createElement('a');
+  link.download = `梦境可视化_${Date.now()}.png`;
+  link.href = vizCanvas.toDataURL('image/png');
+  link.click();
+}
+
+// 重新生成
+function regenerate(){
+  const text = document.getElementById('dreamText').value.trim();
+  if(text){
+    visualizeDream();
+  }
+}
+
+// 初始化
+renderHistory();
+
+// 初始生成一个默认可视化
+currentEmotions = {joy:20, sadness:30, fear:40, anger:10, calm:50, surprise:35};
+currentSymbols = ['梦境','走廊','光','影子'];
+generateVisualization(currentEmotions, currentSymbols);
+animate();
+</script>
+</body>
+</html>

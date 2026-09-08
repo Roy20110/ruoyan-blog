@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>若颜的博客 | 记录生活与创作</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --primary:#ff6b9d;
+  --secondary:#c084fc;
+  --accent:#60a5fa;
+  --bg-start:#ffe4ec;
+  --bg-mid:#e8d5f5;
+  --bg-end:#d4e8f7;
+  --text-dark:#2d2d3f;
+  --text-mid:#6b6b80;
+  --text-light:#9999aa;
+  --card-bg:rgba(255,255,255,0.65);
+  --card-border:rgba(255,255,255,0.8);
+  --shadow:0 8px 32px rgba(255,105,180,0.12);
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;
+  background:linear-gradient(135deg,var(--bg-start) 0%,var(--bg-mid) 35%,var(--bg-end) 70%,#e8f0ff 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+  color:var(--text-dark);
+  line-height:1.7;
+  overflow-x:hidden;
+}
+/* 装饰背景 */
+.bg-decoration{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.4;animation:float 20s ease-in-out infinite}
+.blob1{width:400px;height:400px;background:#ffb3c6;top:-100px;right:-100px}
+.blob2{width:350px;height:350px;background:#c4b5fd;bottom:-50px;left:-80px;animation-delay:-7s}
+.blob3{width:300px;height:300px;background:#93c5fd;top:40%;left:60%;animation-delay:-14s}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-30px) scale(1.05)}66%{transform:translate(-20px,20px) scale(0.95)}}
+
+/* 导航栏 */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,0.7);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.5);
+  padding:0 24px;
+  transition:all 0.3s;
+}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-logo{font-family:'Noto Serif SC',serif;font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer}
+.nav-links{display:flex;gap:32px;list-style:none}
+.nav-links a{text-decoration:none;color:var(--text-mid);font-size:14px;font-weight:500;transition:color 0.3s;position:relative}
+.nav-links a:hover{color:var(--primary)}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width 0.3s;border-radius:2px}
+.nav-links a:hover::after{width:100%}
+.nav-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px}
+.nav-menu-btn span{display:block;width:24px;height:2px;background:var(--text-dark);margin:5px 0;transition:all 0.3s;border-radius:2px}
+
+/* 主内容 */
+.container{max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* Hero区域 */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:100px 24px 60px}
+.hero-content{max-width:800px}
+.hero-avatar{
+  width:120px;height:120px;margin:0 auto 32px;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 32px rgba(255,107,157,0.3);
+  position:relative;
+  animation:avatarFloat 4s ease-in-out infinite;
+}
+.hero-avatar::before{
+  content:'';position:absolute;inset:-4px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--secondary),var(--accent));
+  z-index:-1;opacity:0.5;filter:blur(8px);
+}
+.hero-avatar svg{width:56px;height:56px;fill:white}
+@keyframes avatarFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.hero-title{
+  font-family:'Noto Serif SC',serif;
+  font-size:clamp(36px,6vw,64px);
+  font-weight:900;
+  line-height:1.2;
+  margin-bottom:20px;
+  background:linear-gradient(135deg,var(--text-dark) 0%,var(--primary) 50%,var(--secondary) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-subtitle{
+  font-size:clamp(16px,2.5vw,20px);
+  color:var(--text-mid);
+  margin-bottom:16px;
+  font-weight:300;
+}
+.hero-desc{
+  font-size:15px;
+  color:var(--text-light);
+  max-width:600px;
+  margin:0 auto 40px;
+  line-height:1.9;
+}
+.hero-tags{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:48px}
+.hero-tag{
+  padding:8px 20px;
+  background:var(--card-bg);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--card-border);
+  border-radius:100px;
+  font-size:13px;
+  color:var(--text-mid);
+  font-weight:500;
+  box-shadow:0 2px 12px rgba(0,0,0,0.04);
+}
+.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn{
+  padding:14px 32px;
+  border:none;
+  border-radius:16px;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.3s;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:white;
+  box-shadow:0 4px 20px rgba(255,107,157,0.3);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,107,157,0.4)}
+.btn-secondary{
+  background:var(--card-bg);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--card-border);
+  color:var(--text-dark);
+}
+.btn-secondary:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.scroll-hint{
+  position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:var(--text-light);font-size:12px;
+  animation:scrollBounce 2s ease-in-out infinite;
+}
+.scroll-hint svg{width:20px;height:20px;stroke:var(--text-light);fill:none;stroke-width:2}
+@keyframes scrollBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+
+/* 通用区块 */
+.section{padding:100px 0}
+.section-header{text-align:center;margin-bottom:60px}
+.section-label{
+  display:inline-block;
+  padding:6px 16px;
+  background:var(--card-bg);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--card-border);
+  border-radius:100px;
+  font-size:12px;
+  color:var(--primary);
+  font-weight:600;
+  letter-spacing:2px;
+  margin-bottom:16px;
+  text-transform:uppercase;
+}
+.section-title{
+  font-family:'Noto Serif SC',serif;
+  font-size:clamp(28px,4vw,42px);
+  font-weight:700;
+  margin-bottom:16px;
+  color:var(--text-dark);
+}
+.section-desc{
+  font-size:15px;
+  color:var(--text-light);
+  max-width:600px;
+  margin:0 auto;
+}
+
+/* 关于我 */
+.about-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:48px;align-items:center}
+.about-card{
+  background:var(--card-bg);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--card-border);
+  border-radius:28px;
+  padding:40px;
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+.about-avatar{
+  width:140px;height:140px;margin:0 auto 24px;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 32px rgba(255,107,157,0.25);
+}
+.about-avatar svg{width:64px;height:64px;fill:white}
+.about-name{font-family:'Noto Serif SC',serif;font-size:28px;font-weight:700;margin-bottom:8px;color:var(--text-dark)}
+.about-role{font-size:14px;color:var(--primary);font-weight:600;margin-bottom:20px}
+.about-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px;padding-top:24px;border-top:1px solid rgba(0,0,0,0.06)}
+.about-stat-num{font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.about-stat-label{font-size:11px;color:var(--text-light);margin-top:4px}
+.about-content h3{font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;margin-bottom:20px;color:var(--text-dark)}
+.about-content p{font-size:15px;color:var(--text-mid);margin-bottom:16px;line-height:1.9}
+.about-skills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.skill-tag{
+  padding:8px 16px;
+  background:rgba(255,107,157,0.08);
+  border:1px solid rgba(255,107,157,0.15);
+  border-radius:100px;
+  font-size:13px;
+  color:var(--primary);
+  font-weight:500;
+}
+
+/* 项目展示 */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:28px}
+.project-card{
+  background:var(--card-bg);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--card-border);
+  border-radius:24px;
+  overflow:hidden;
+  transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+  cursor:pointer;
+  position:relative;
+}
+.project-card:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(255,107,157,0.18)}
+.project-cover{
+  height:180px;
+  position:relative;
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.project-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,0.1) 100%)}
+.project-cover svg{width:64px;height:64px;fill:white;opacity:0.9;position:relative;z-index:1}
+.project-cover-1{background:linear-gradient(135deg,#ff6b9d,#c084fc)}
+.project-cover-2{background:linear-gradient(135deg,#60a5fa,#a78bfa)}
+.project-cover-3{background:linear-gradient(135deg,#34d399,#60a5fa)}
+.project-cover-4{background:linear-gradient(135deg,#fbbf24,#f87171)}
+.project-cover-5{background:linear-gradient(135deg,#f472b6,#a78bfa)}
+.project-cover-6{background:linear-gradient(135deg,#22d3ee,#818cf8)}
+.project-cover-7{background:linear-gradient(135deg,#fb923c,#f43f5e)}
+.project-cover-8{background:linear-gradient(135deg,#4ade80,#22d3ee)}
+.project-cover-9{background:linear-gradient(135deg,#c084fc,#f472b6)}
+.project-cover-10{background:linear-gradient(135deg,#facc15,#fb923c)}
+.project-body{padding:24px}
+.project-category{
+  display:inline-block;
+  padding:4px 12px;
+  background:rgba(255,107,157,0.1);
+  border-radius:100px;
+  font-size:11px;
+  color:var(--primary);
+  font-weight:600;
+  margin-bottom:12px;
+}
+.project-title{font-family:'Noto Serif SC',serif;font-size:18px;font-weight:700;margin-bottom:10px;color:var(--text-dark)}
+.project-desc{font-size:13px;color:var(--text-mid);line-height:1.7;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.project-meta{display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid rgba(0,0,0,0.05)}
+.project-date{font-size:12px;color:var(--text-light)}
+.project-link{font-size:13px;color:var(--primary);font-weight:600;text-decoration:none;display:flex;align-items:center;gap:4px}
+.project-link svg{width:14px;height:14px;stroke:var(--primary);fill:none;stroke-width:2}
+
+/* 博客文章 */
+.articles-list{max-width:800px;margin:0 auto}
+.article-item{
+  background:var(--card-bg);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--card-border);
+  border-radius:20px;
+  padding:28px 32px;
+  margin-bottom:20px;
+  transition:all 0.3s;
+  cursor:pointer;
+}
+.article-item:hover{transform:translateX(6px);box-shadow:var(--shadow)}
+.article-meta{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.article-date{font-size:12px;color:var(--text-light)}
+.article-tag{
+  padding:3px 10px;
+  background:rgba(192,132,252,0.12);
+  border-radius:100px;
+  font-size:11px;
+  color:var(--secondary);
+  font-weight:600;
+}
+.article-title{font-family:'Noto Serif SC',serif;font-size:18px;font-weight:700;margin-bottom:10px;color:var(--text-dark)}
+.article-excerpt{font-size:14px;color:var(--text-mid);line-height:1.8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* 时间线 */
+.timeline{max-width:800px;margin:0 auto;position:relative;padding-left:40px}
+.timeline::before{
+  content:'';position:absolute;left:12px;top:0;bottom:0;
+  width:2px;background:linear-gradient(180deg,var(--primary),var(--secondary),var(--accent));
+  border-radius:2px;
+}
+.timeline-item{position:relative;margin-bottom:40px}
+.timeline-item:last-child{margin-bottom:0}
+.timeline-dot{
+  position:absolute;left:-34px;top:6px;
+  width:18px;height:18px;
+  background:white;
+  border:3px solid var(--primary);
+  border-radius:50%;
+  box-shadow:0 0 0 4px rgba(255,107,157,0.15);
+}
+.timeline-date{font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px}
+.timeline-title{font-family:'Noto Serif SC',serif;font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text-dark)}
+.timeline-desc{font-size:14px;color:var(--text-mid);line-height:1.8}
+
+/* 页脚 */
+.footer{
+  background:rgba(255,255,255,0.5);
+  backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,0.5);
+  padding:60px 0 40px;
+  margin-top:60px;
+  position:relative;
+  z-index:1;
+}
+.footer-content{max-width:1200px;margin:0 auto;padding:0 24px;text-align:center}
+.footer-logo{font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px}
+.footer-desc{font-size:14px;color:var(--text-light);margin-bottom:32px;max-width:400px;margin-left:auto;margin-right:auto}
+.footer-links{display:flex;justify-content:center;gap:32px;margin-bottom:32px;flex-wrap:wrap}
+.footer-links a{text-decoration:none;color:var(--text-mid);font-size:14px;transition:color 0.3s}
+.footer-links a:hover{color:var(--primary)}
+.footer-copyright{font-size:12px;color:var(--text-light);padding-top:24px;border-top:1px solid rgba(0,0,0,0.05)}
+
+/* 响应式 */
+@media(max-width:768px){
+  .nav-links{display:none}
+  .nav-menu-btn{display:block}
+  .about-grid{grid-template-columns:1fr;gap:32px}
+  .projects-grid{grid-template-columns:1fr}
+  .hero{padding:80px 20px 40px}
+  .section{padding:60px 0}
+  .article-item{padding:20px 24px}
+  .timeline{padding-left:32px}
+  .timeline-dot{left:-26px}
+}
+
+/* 滚动动画 */
+.fade-in{opacity:0;transform:translateY(30px);transition:all 0.8s cubic-bezier(0.4,0,0.2,1)}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- 装饰背景 -->
+<div class="bg-decoration">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+</div>
+
+<!-- 导航栏 -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="scrollToTop()">若颜</div>
+    <ul class="nav-links">
+      <li><a href="#about">关于我</a></li>
+      <li><a href="#projects">项目作品</a></li>
+      <li><a href="#articles">博客文章</a></li>
+      <li><a href="#timeline">成长轨迹</a></li>
+    </ul>
+    <button class="nav-menu-btn" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Hero区域 -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-avatar">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    </div>
+    <h1 class="hero-title">若颜的博客</h1>
+    <p class="hero-subtitle">纪录片导演 · 创作者 · 永远的学习者</p>
+    <p class="hero-desc">用镜头记录世界，用文字书写生活。这里是我的个人博客，记录创作过程、分享项目作品、留存生活感悟。每一个项目都是一次探索，每一篇文章都是一段思考。</p>
+    <div class="hero-tags">
+      <span class="hero-tag">纪录片创作</span>
+      <span class="hero-tag">独立开发</span>
+      <span class="hero-tag">摄影记录</span>
+      <span class="hero-tag">生活随笔</span>
+    </div>
+    <div class="hero-cta">
+      <a href="#projects" class="btn btn-primary">查看作品</a>
+      <a href="#about" class="btn btn-secondary">了解更多</a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>向下滚动</span>
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  </div>
+</section>
+
+<!-- 关于我 -->
+<section id="about" class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-label">About Me</span>
+      <h2 class="section-title">关于我</h2>
+      <p class="section-desc">一个用镜头和代码表达世界的创作者</p>
+    </div>
+    <div class="about-grid">
+      <div class="about-card fade-in">
+        <div class="about-avatar">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <h3 class="about-name">若颜</h3>
+        <p class="about-role">纪录片导演 / 独立开发者</p>
+        <div class="about-stats">
+          <div>
+            <div class="about-stat-num">10+</div>
+            <div class="about-stat-label">项目作品</div>
+          </div>
+          <div>
+            <div class="about-stat-num">50+</div>
+            <div class="about-stat-label">文章随笔</div>
+          </div>
+          <div>
+            <div class="about-stat-num">∞</div>
+            <div class="about-stat-label">创作热情</div>
+          </div>
+        </div>
+      </div>
+      <div class="about-content fade-in">
+        <h3>你好，我是若颜</h3>
+        <p>我是一名纪录片导演，热爱用镜头捕捉真实的故事。在创作之余，我也喜欢探索技术，用代码实现一些有趣的小项目。对我来说，影像和代码都是表达世界的方式，一个记录真实，一个创造可能。</p>
+        <p>这个博客是我的个人空间，记录我在纪录片创作、独立开发、摄影旅行中的所思所感。希望这里的内容能给你带来一些启发，或者只是让你在忙碌的生活中找到片刻的宁静。</p>
+        <p>如果你对我的作品感兴趣，或者想一起合作，欢迎随时联系我。创作的路上，很高兴能遇见你。</p>
+        <div class="about-skills">
+          <span class="skill-tag">纪录片拍摄</span>
+          <span class="skill-tag">视频剪辑</span>
+          <span class="skill-tag">摄影</span>
+          <span class="skill-tag">前端开发</span>
+          <span class="skill-tag">产品设计</span>
+          <span class="skill-tag">文字创作</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 项目作品 -->
+<section id="projects" class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-label">Projects</span>
+      <h2 class="section-title">项目作品</h2>
+      <p class="section-desc">每一个项目都是一次探索，一次创造，一次与世界的对话</p>
+    </div>
+    <div class="projects-grid">
+
+      <!-- 项目1 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-1">
+          <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">社交平台</span>
+          <h3 class="project-title">Jiye Circle 微圈扩列</h3>
+          <p class="project-desc">二次元扩列社交平台，支持扩列广场、动态发布、站内聊天、VIP会员、积分系统。纯前端开发，零服务器成本，已上线运营。</p>
+          <div class="project-meta">
+            <span class="project-date">2026.09</span>
+            <a href="https://roy20110.github.io/jiye-circle/" class="project-link" target="_blank">访问项目 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目2 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-2">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">互动工具</span>
+          <h3 class="project-title">匿名提问箱</h3>
+          <p class="project-desc">多用户独立匿名提问箱平台，每个人都能拥有自己的提问箱，支持自定义头像背景、匿名提问、箱主回复、分享转发。</p>
+          <div class="project-meta">
+            <span class="project-date">2026.08</span>
+            <a href="https://roy20110.github.io/anonymous-box/" class="project-link" target="_blank">访问项目 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目3 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-3">
+          <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">游戏开发</span>
+          <h3 class="project-title">手环三合一棋牌游戏</h3>
+          <p class="project-desc">小米手环Vela平台离线棋牌游戏合集，包含斗地主、双扣、掼蛋三款游戏，内置本地AI机器人，纯离线运行，零服务器成本。</p>
+          <div class="project-meta">
+            <span class="project-date">2026.08</span>
+            <span class="project-link">代码已完成 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目4 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-4">
+          <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">纪录片</span>
+          <h3 class="project-title">《城市边缘》纪录片</h3>
+          <p class="project-desc">关注城市边缘群体的纪录片项目，记录那些在城市角落默默生活的人们。历时半年拍摄，采访30余位受访者，呈现真实的城市另一面。</p>
+          <div class="project-meta">
+            <span class="project-date">2026.06</span>
+            <span class="project-link">后期制作中 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目5 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-5">
+          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">摄影</span>
+          <h3 class="project-title">旅行摄影日志</h3>
+          <p class="project-desc">用镜头记录旅途中的风景与人情。从江南水乡到西北大漠，从异国街头到故乡小巷，每一张照片都是一段故事，一次相遇。</p>
+          <div class="project-meta">
+            <span class="project-date">持续更新</span>
+            <span class="project-link">120+ 张作品 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目6 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-6">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">阅读</span>
+          <h3 class="project-title">读书笔记分享</h3>
+          <p class="project-desc">记录阅读过程中的思考与感悟。从文学经典到社科著作，从技术书籍到散文随笔，每一本书都是一次与作者的对话，一次自我的成长。</p>
+          <div class="project-meta">
+            <span class="project-date">持续更新</span>
+            <span class="project-link">40+ 篇笔记 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目7 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-7">
+          <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">音乐</span>
+          <h3 class="project-title">音乐收藏与推荐</h3>
+          <p class="project-desc">整理那些触动心灵的音乐。从后摇到民谣，从古典到电子，每一首歌都承载着一段记忆，一种情绪。在这里分享我的私人歌单。</p>
+          <div class="project-meta">
+            <span class="project-date">持续更新</span>
+            <span class="project-link">200+ 首收藏 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目8 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-8">
+          <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">影评</span>
+          <h3 class="project-title">电影影评集</h3>
+          <p class="project-desc">作为纪录片导演，电影是我最重要的学习来源。记录观影后的思考，分析镜头语言、叙事结构、主题表达，在别人的作品中寻找自己的方向。</p>
+          <div class="project-meta">
+            <span class="project-date">持续更新</span>
+            <span class="project-link">60+ 篇影评 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目9 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-9">
+          <svg viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">美食</span>
+          <h3 class="project-title">美食探店记录</h3>
+          <p class="project-desc">美食是了解一座城市最直接的方式。记录旅途中遇到的美味，从街头小吃到特色餐厅，每一道菜背后都有一个故事，一段地域文化。</p>
+          <div class="project-meta">
+            <span class="project-date">持续更新</span>
+            <span class="project-link">80+ 家探店 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目10 -->
+      <div class="project-card fade-in">
+        <div class="project-cover project-cover-10">
+          <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+        </div>
+        <div class="project-body">
+          <span class="project-category">技术</span>
+          <h3 class="project-title">技术学习笔记</h3>
+          <p class="project-desc">记录学习编程和技术的过程。从前端开发到产品设计，从工具使用到思维方法，每一次学习都是一次认知的升级，一次能力的拓展。</p>
+          <div class="project-meta">
+            <span class="project-date">持续更新</span>
+            <span class="project-link">30+ 篇笔记 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- 博客文章 -->
+<section id="articles" class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-label">Articles</span>
+      <h2 class="section-title">博客文章</h2>
+      <p class="section-desc">记录思考，分享感悟，留存生活中的点滴</p>
+    </div>
+    <div class="articles-list">
+
+      <div class="article-item fade-in">
+        <div class="article-meta">
+          <span class="article-date">2026年9月7日</span>
+          <span class="article-tag">创作随笔</span>
+        </div>
+        <h3 class="article-title">为什么我开始写博客</h3>
+        <p class="article-excerpt">在这个短视频和碎片化信息充斥的时代，我反而想回到最原始的文字表达。博客对我来说不是流量工具，而是一个私人的思考空间，一个与自己对话的地方。在这里，我可以慢慢写，慢慢想，慢慢记录生活中那些值得被记住的瞬间。</p>
+      </div>
+
+      <div class="article-item fade-in">
+        <div class="article-meta">
+          <span class="article-date">2026年8月25日</span>
+          <span class="article-tag">纪录片</span>
+        </div>
+        <h3 class="article-title">拍摄《城市边缘》的一些感悟</h3>
+        <p class="article-excerpt">历时半年的拍摄，让我对"真实"有了更深的理解。纪录片不是把镜头对准别人，而是走进别人的生活，然后诚实地呈现。在这个过程中，我也在不断审视自己，审视我们所处的这个时代。每一个受访者的故事，都在改变着我看待世界的方式。</p>
+      </div>
+
+      <div class="article-item fade-in">
+        <div class="article-meta">
+          <span class="article-date">2026年8月12日</span>
+          <span class="article-tag">技术</span>
+        </div>
+        <h3 class="article-title">从零开始学前端：一个导演的编程之旅</h3>
+        <p class="article-excerpt">很多人问我，一个纪录片导演为什么要学编程。对我来说，代码和影像都是创造的工具。影像让我记录世界，代码让我创造世界。学习编程的过程并不容易，但每一次解决问题的成就感，和拍出一个好镜头时的感觉是一样的。这篇文章记录我学习前端的心路历程。</p>
+      </div>
+
+      <div class="article-item fade-in">
+        <div class="article-meta">
+          <span class="article-date">2026年7月20日</span>
+          <span class="article-tag">旅行</span>
+        </div>
+        <h3 class="article-title">在西北的二十天：一场与自己的对话</h3>
+        <p class="article-excerpt">一个人，一台相机，一辆车，在西北的戈壁和沙漠中穿行二十天。没有信号，没有人群，只有风声和自己的心跳。在这片广袤的土地上，我学会了与孤独相处，学会了在沉默中倾听。这趟旅行让我明白，最遥远的距离不是地理上的，而是人与自己内心的距离。</p>
+      </div>
+
+      <div class="article-item fade-in">
+        <div class="article-meta">
+          <span class="article-date">2026年7月5日</span>
+          <span class="article-tag">阅读</span>
+        </div>
+        <h3 class="article-title">读《百年孤独》：在魔幻中看见真实</h3>
+        <p class="article-excerpt">马尔克斯用魔幻的笔触，写出了最真实的人性。布恩迪亚家族七代人的兴衰，不仅仅是一个家族的故事，更是整个拉丁美洲的缩影，是人类共同命运的寓言。每一次重读，都能发现新的细节，新的感悟。经典之所以是经典，就在于它能穿越时间，永远与当下的我们对话。</p>
+      </div>
+
+      <div class="article-item fade-in">
+        <div class="article-meta">
+          <span class="article-date">2026年6月18日</span>
+          <span class="article-tag">生活</span>
+        </div>
+        <h3 class="article-title">慢下来，才能看见生活本来的样子</h3>
+        <p class="article-excerpt">我们总是在赶路，总是在追求更快、更高、更强。但有时候，慢下来反而能走得更远。慢下来，才能看见路边的花开，听见风吹过树叶的声音，感受到阳光洒在脸上的温度。生活不是一场竞速比赛，而是一段需要慢慢品味的旅程。这篇文章，写给所有和我一样，曾经焦虑过的人。</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- 成长轨迹 -->
+<section id="timeline" class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-label">Journey</span>
+      <h2 class="section-title">成长轨迹</h2>
+      <p class="section-desc">每一步都算数，每一段经历都在塑造今天的我</p>
+    </div>
+    <div class="timeline">
+
+      <div class="timeline-item fade-in">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2026年9月</div>
+        <h3 class="timeline-title">创建个人博客</h3>
+        <p class="timeline-desc">搭建属于自己的个人博客，开始系统地记录创作、生活和思考。这是一个新的开始，也是对过去的总结。</p>
+      </div>
+
+      <div class="timeline-item fade-in">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2026年8月</div>
+        <h3 class="timeline-title">Jiye Circle 上线</h3>
+        <p class="timeline-desc">独立开发的二次元扩列社交平台正式上线，从零开始学习前端开发，到完整产品上线，这是一次全新的尝试。</p>
+      </div>
+
+      <div class="timeline-item fade-in">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2026年6月</div>
+        <h3 class="timeline-title">《城市边缘》杀青</h3>
+        <p class="timeline-desc">历时半年的纪录片拍摄完成，采访30余位受访者，积累素材超过200小时。进入后期制作阶段。</p>
+      </div>
+
+      <div class="timeline-item fade-in">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2026年4月</div>
+        <h3 class="timeline-title">开始学习编程</h3>
+        <p class="timeline-desc">出于对技术的好奇，开始自学前端开发。从HTML、CSS到JavaScript，一步步走进代码的世界，发现了另一种创造的可能。</p>
+      </div>
+
+      <div class="timeline-item fade-in">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2025年12月</div>
+        <h3 class="timeline-title">西北独自旅行</h3>
+        <p class="timeline-desc">一个人驾车穿越西北二十天，在戈壁和沙漠中与自己对话。这趟旅行改变了我对生活、对创作、对自我的认知。</p>
+      </div>
+
+      <div class="timeline-item fade-in">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2025年6月</div>
+        <h3 class="timeline-title">成为独立纪录片导演</h3>
+        <p class="timeline-desc">从机构离职，开始独立纪录片创作。没有了平台的束缚，也没有了稳定的收入，但获得了创作的自由和表达的勇气。</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-logo">若颜的博客</div>
+    <p class="footer-desc">用镜头记录世界，用文字书写生活。感谢你的来访，愿我们都能在创作中找到属于自己的光。</p>
+    <div class="footer-links">
+      <a href="#about">关于我</a>
+      <a href="#projects">项目作品</a>
+      <a href="#articles">博客文章</a>
+      <a href="#timeline">成长轨迹</a>
+    </div>
+    <p class="footer-copyright">2026 若颜的博客 · 用心创作，用爱记录</p>
+  </div>
+</footer>
+
+<script>
+// 滚动到顶部
+function scrollToTop(){window.scrollTo({top:0,behavior:'smooth'})}
+
+// 移动端菜单（简化版）
+function toggleMenu(){
+  const links=document.querySelector('.nav-links');
+  if(links.style.display==='flex'){links.style.display='none'}
+  else{links.style.display='flex';links.style.position='absolute';links.style.top='64px';links.style.left='0';links.style.right='0';links.style.flexDirection='column';links.style.background='rgba(255,255,255,0.95)';links.style.padding='20px';links.style.gap='16px';links.style.backdropFilter='blur(20px)'}
+}
+
+// 滚动动画
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){entry.target.classList.add('visible')}
+  })
+},{threshold:0.1});
+
+document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+
+// 导航栏滚动效果
+let lastScroll=0;
+window.addEventListener('scroll',()=>{
+  const nav=document.querySelector('.nav');
+  const currentScroll=window.pageYOffset;
+  if(currentScroll>100){nav.style.background='rgba(255,255,255,0.85)';nav.style.boxShadow='0 2px 20px rgba(0,0,0,0.05)'}
+  else{nav.style.background='rgba(255,255,255,0.7)';nav.style.boxShadow='none'}
+  lastScroll=currentScroll;
+});
+
+// 平滑滚动到锚点
+document.querySelectorAll('a[href^="#"]').forEach(anchor=>{
+  anchor.addEventListener('click',function(e){
+    e.preventDefault();
+    const target=document.querySelector(this.getAttribute('href'));
+    if(target){target.scrollIntoView({behavior:'smooth',block:'start'})}
+    // 关闭移动端菜单
+    const links=document.querySelector('.nav-links');
+    if(window.innerWidth<=768){links.style.display='none'}
+  });
+});
+</script>
+
+</body>
+</html>

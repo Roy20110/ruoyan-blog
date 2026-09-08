@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>若颜翻译 - 在线翻译工具</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#1a73e8;
+  --primary-light:#4285f4;
+  --primary-dark:#1557b0;
+  --bg:#f8f9fa;
+  --card:#fff;
+  --text:#202124;
+  --text-mid:#5f6368;
+  --text-light:#9aa0a6;
+  --border:#dadce0;
+  --hover:#f1f3f4;
+  --success:#34a853;
+  --error:#ea4335;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+/* 顶部导航 */
+.topbar{
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.topbar-left{display:flex;align-items:center;gap:12px;cursor:pointer}
+.topbar-logo{
+  width:40px;height:40px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+}
+.topbar-logo svg{width:22px;height:22px;fill:#fff}
+.topbar-title{font-size:20px;font-weight:600}
+.topbar-title span{color:var(--primary)}
+.topbar-nav{display:flex;gap:8px}
+.topbar-nav a{
+  text-decoration:none;color:var(--text-mid);
+  font-size:14px;padding:8px 16px;border-radius:20px;
+  transition:all 0.2s;
+}
+.topbar-nav a:hover{background:var(--hover);color:var(--text)}
+.topbar-nav a.active{background:var(--primary);color:#fff}
+
+/* 主容器 */
+.container{max-width:1100px;margin:0 auto;padding:32px 24px}
+
+/* 语言选择栏 */
+.lang-bar{
+  display:flex;align-items:center;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px 12px 0 0;
+  padding:0 16px;
+  height:56px;
+  border-bottom:none;
+}
+.lang-select{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;
+  position:relative;
+}
+.lang-select select{
+  appearance:none;
+  border:none;
+  background:none;
+  font-size:15px;
+  font-weight:500;
+  color:var(--text);
+  cursor:pointer;
+  padding:8px 24px 8px 8px;
+  outline:none;
+  text-align:center;
+}
+.lang-select select:hover{color:var(--primary)}
+.lang-select::after{
+  content:'';
+  position:absolute;
+  right:calc(50% - 40px);
+  top:50%;
+  transform:translateY(-50%);
+  border:5px solid transparent;
+  border-top-color:var(--text-mid);
+  pointer-events:none;
+}
+.swap-btn{
+  width:44px;height:44px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--card);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+  flex-shrink:0;
+  margin:0 8px;
+}
+.swap-btn:hover{
+  background:var(--primary);
+  border-color:var(--primary);
+  transform:rotate(180deg);
+}
+.swap-btn:hover svg{fill:#fff}
+.swap-btn svg{width:20px;height:20px;fill:var(--text-mid);transition:fill 0.2s}
+
+/* 翻译区域 */
+.translate-area{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border:1px solid var(--border);
+  border-radius:0 0 12px 12px;
+  overflow:hidden;
+  background:var(--card);
+  min-height:320px;
+}
+.input-panel,.output-panel{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+.input-panel{border-right:1px solid var(--border)}
+.input-panel textarea{
+  flex:1;
+  border:none;
+  outline:none;
+  resize:none;
+  padding:20px;
+  font-size:18px;
+  line-height:1.6;
+  font-family:inherit;
+  color:var(--text);
+  background:transparent;
+}
+.input-panel textarea::placeholder{color:var(--text-light)}
+.output-panel{
+  background:#f8f9fa;
+  padding:20px;
+  font-size:18px;
+  line-height:1.6;
+  overflow-y:auto;
+  max-height:400px;
+}
+.output-panel .placeholder{color:var(--text-light)}
+.output-panel .result{white-space:pre-wrap;word-break:break-word}
+.output-panel.loading::after{
+  content:'';
+  display:inline-block;
+  width:20px;height:20px;
+  border:2px solid var(--border);
+  border-top-color:var(--primary);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  margin-left:8px;
+  vertical-align:middle;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 底部工具栏 */
+.toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;
+  border-top:1px solid var(--border);
+  background:var(--card);
+}
+.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px}
+.tool-btn{
+  background:none;border:none;cursor:pointer;
+  padding:8px;border-radius:8px;
+  color:var(--text-mid);
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;
+  transition:all 0.15s;
+}
+.tool-btn:hover{background:var(--hover);color:var(--primary)}
+.tool-btn svg{width:18px;height:18px;fill:currentColor}
+.char-count{font-size:12px;color:var(--text-light)}
+
+/* 翻译按钮 */
+.translate-btn{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  padding:10px 28px;
+  border-radius:24px;
+  font-size:14px;
+  font-weight:500;
+  cursor:pointer;
+  transition:all 0.2s;
+  display:flex;align-items:center;gap:8px;
+}
+.translate-btn:hover{background:var(--primary-dark);box-shadow:0 2px 8px rgba(26,115,232,0.3)}
+.translate-btn:disabled{background:var(--text-light);cursor:not-allowed}
+.translate-btn svg{width:16px;height:16px;fill:#fff}
+
+/* 常用短语 */
+.quick-phrases{
+  margin-top:24px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+}
+.quick-phrases h3{
+  font-size:15px;font-weight:600;
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.quick-phrases h3 svg{width:18px;height:18px;fill:var(--primary)}
+.phrases-list{display:flex;flex-wrap:wrap;gap:8px}
+.phrase-tag{
+  padding:6px 14px;
+  background:var(--hover);
+  border-radius:16px;
+  font-size:13px;
+  color:var(--text-mid);
+  cursor:pointer;
+  transition:all 0.15s;
+  border:1px solid transparent;
+}
+.phrase-tag:hover{
+  background:#e8f0fe;
+  color:var(--primary);
+  border-color:var(--primary);
+}
+
+/* 历史记录 */
+.history-section{
+  margin-top:24px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+}
+.history-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+}
+.history-header h3{
+  font-size:15px;font-weight:600;
+  display:flex;align-items:center;gap:8px;
+}
+.history-header h3 svg{width:18px;height:18px;fill:var(--primary)}
+.clear-history{
+  background:none;border:none;cursor:pointer;
+  font-size:12px;color:var(--text-light);
+  padding:4px 8px;border-radius:6px;
+}
+.clear-history:hover{color:var(--error);background:var(--hover)}
+.history-list{display:flex;flex-direction:column;gap:8px}
+.history-item{
+  padding:12px 16px;
+  background:var(--hover);
+  border-radius:8px;
+  cursor:pointer;
+  transition:background 0.15s;
+}
+.history-item:hover{background:#e8f0fe}
+.history-item .source{
+  font-size:14px;color:var(--text);
+  margin-bottom:4px;
+  display:-webkit-box;
+  -webkit-line-clamp:1;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.history-item .target{
+  font-size:13px;color:var(--text-mid);
+  display:-webkit-box;
+  -webkit-line-clamp:1;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.history-item .meta{
+  font-size:11px;color:var(--text-light);
+  margin-top:4px;
+}
+.empty-history{
+  text-align:center;
+  padding:32px;
+  color:var(--text-light);
+  font-size:14px;
+}
+
+/* Toast提示 */
+.toast{
+  position:fixed;
+  bottom:32px;
+  left:50%;
+  transform:translateX(-50%) translateY(100px);
+  background:var(--text);
+  color:#fff;
+  padding:12px 24px;
+  border-radius:24px;
+  font-size:14px;
+  z-index:1000;
+  transition:transform 0.3s ease;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--error)}
+
+/* 响应式 */
+@media(max-width:768px){
+  .translate-area{grid-template-columns:1fr}
+  .input-panel{border-right:none;border-bottom:1px solid var(--border)}
+  .topbar-nav{display:none}
+  .container{padding:16px}
+  .lang-select select{font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="topbar">
+  <div class="topbar-left" onclick="location.href='index.html'">
+    <div class="topbar-logo">
+      <svg viewBox="0 0 24 24"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+    </div>
+    <div class="topbar-title">若颜<span>翻译</span></div>
+  </div>
+  <div class="topbar-nav">
+    <a href="index.html">博客首页</a>
+    <a href="music.html">音乐播放器</a>
+    <a href="#" class="active">翻译工具</a>
+  </div>
+</div>
+
+<div class="container">
+  <!-- 语言选择 -->
+  <div class="lang-bar">
+    <div class="lang-select">
+      <select id="sourceLang">
+        <option value="zh-CN">中文</option>
+        <option value="en">英语</option>
+        <option value="ja">日语</option>
+        <option value="ko">韩语</option>
+        <option value="fr">法语</option>
+        <option value="de">德语</option>
+        <option value="es">西班牙语</option>
+        <option value="ru">俄语</option>
+        <option value="it">意大利语</option>
+        <option value="pt">葡萄牙语</option>
+        <option value="ar">阿拉伯语</option>
+        <option value="th">泰语</option>
+        <option value="vi">越南语</option>
+      </select>
+    </div>
+    <button class="swap-btn" onclick="swapLanguages()" title="交换语言">
+      <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+    </button>
+    <div class="lang-select">
+      <select id="targetLang">
+        <option value="en">英语</option>
+        <option value="zh-CN">中文</option>
+        <option value="ja">日语</option>
+        <option value="ko">韩语</option>
+        <option value="fr">法语</option>
+        <option value="de">德语</option>
+        <option value="es">西班牙语</option>
+        <option value="ru">俄语</option>
+        <option value="it">意大利语</option>
+        <option value="pt">葡萄牙语</option>
+        <option value="ar">阿拉伯语</option>
+        <option value="th">泰语</option>
+        <option value="vi">越南语</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 翻译区域 -->
+  <div class="translate-area">
+    <div class="input-panel">
+      <textarea id="sourceText" placeholder="输入要翻译的文字..." maxlength="5000" oninput="updateCharCount()"></textarea>
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="tool-btn" onclick="clearInput()" title="清空">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            清空
+          </button>
+          <button class="tool-btn" onclick="speakSource()" title="朗读">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            朗读
+          </button>
+        </div>
+        <div class="toolbar-right">
+          <span class="char-count" id="charCount">0 / 5000</span>
+        </div>
+      </div>
+    </div>
+    <div class="output-panel" id="outputPanel">
+      <div class="placeholder" id="outputPlaceholder">翻译结果将显示在这里</div>
+      <div class="result" id="outputResult" style="display:none"></div>
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="tool-btn" onclick="copyResult()" title="复制">
+            <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            复制
+          </button>
+          <button class="tool-btn" onclick="speakTarget()" title="朗读">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            朗读
+          </button>
+        </div>
+        <div class="toolbar-right">
+          <button class="translate-btn" onclick="translate()" id="translateBtn">
+            <svg viewBox="0 0 24 24"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04z"/></svg>
+            翻译
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 常用短语 -->
+  <div class="quick-phrases">
+    <h3>
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      常用短语
+    </h3>
+    <div class="phrases-list">
+      <span class="phrase-tag" onclick="usePhrase('你好，很高兴认识你')">你好，很高兴认识你</span>
+      <span class="phrase-tag" onclick="usePhrase('请问这个多少钱？')">请问这个多少钱？</span>
+      <span class="phrase-tag" onclick="usePhrase('我听不懂，请再说一遍')">我听不懂，请再说一遍</span>
+      <span class="phrase-tag" onclick="usePhrase('洗手间在哪里？')">洗手间在哪里？</span>
+      <span class="phrase-tag" onclick="usePhrase('谢谢你的帮助')">谢谢你的帮助</span>
+      <span class="phrase-tag" onclick="usePhrase('我想预订一个房间')">我想预订一个房间</span>
+      <span class="phrase-tag" onclick="usePhrase('这个菜很好吃')">这个菜很好吃</span>
+      <span class="phrase-tag" onclick="usePhrase('能帮我拍张照吗？')">能帮我拍张照吗？</span>
+      <span class="phrase-tag" onclick="usePhrase('我迷路了')">我迷路了</span>
+      <span class="phrase-tag" onclick="usePhrase('再见，期待下次见面')">再见，期待下次见面</span>
+    </div>
+  </div>
+
+  <!-- 历史记录 -->
+  <div class="history-section">
+    <div class="history-header">
+      <h3>
+        <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+        翻译历史
+      </h3>
+      <button class="clear-history" onclick="clearHistory()">清空历史</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="empty-history">暂无翻译记录</div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const sourceText = document.getElementById('sourceText');
+const sourceLang = document.getElementById('sourceLang');
+const targetLang = document.getElementById('targetLang');
+const outputPanel = document.getElementById('outputPanel');
+const outputPlaceholder = document.getElementById('outputPlaceholder');
+const outputResult = document.getElementById('outputResult');
+const translateBtn = document.getElementById('translateBtn');
+const charCount = document.getElementById('charCount');
+const historyList = document.getElementById('historyList');
+const toast = document.getElementById('toast');
+
+let history = JSON.parse(localStorage.getItem('translateHistory') || '[]');
+
+// 翻译功能
+async function translate(){
+  const text = sourceText.value.trim();
+  if(!text){
+    showToast('请输入要翻译的文字', 'error');
+    return;
+  }
+  
+  const from = sourceLang.value;
+  const to = targetLang.value;
+  
+  if(from === to){
+    outputResult.textContent = text;
+    outputPlaceholder.style.display = 'none';
+    outputResult.style.display = 'block';
+    addToHistory(text, text, from, to);
+    return;
+  }
+  
+  translateBtn.disabled = true;
+  outputPanel.classList.add('loading');
+  outputPlaceholder.style.display = 'none';
+  outputResult.style.display = 'none';
+  
+  try{
+    const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`);
+    const data = await response.json();
+    
+    if(data.responseStatus === 200){
+      const result = data.responseData.translatedText;
+      outputResult.textContent = result;
+      outputResult.style.display = 'block';
+      addToHistory(text, result, from, to);
+    }else{
+      throw new Error(data.responseDetails || '翻译失败');
+    }
+  }catch(error){
+    console.error('翻译错误:', error);
+    showToast('翻译失败，请检查网络后重试', 'error');
+    outputPlaceholder.style.display = 'block';
+  }finally{
+    outputPanel.classList.remove('loading');
+    translateBtn.disabled = false;
+  }
+}
+
+// 交换语言
+function swapLanguages(){
+  const temp = sourceLang.value;
+  sourceLang.value = targetLang.value;
+  targetLang.value = temp;
+  
+  // 交换输入输出文本
+  const resultText = outputResult.textContent;
+  if(resultText && resultText !== '翻译结果将显示在这里'){
+    sourceText.value = resultText;
+    outputResult.textContent = '';
+    outputResult.style.display = 'none';
+    outputPlaceholder.style.display = 'block';
+    updateCharCount();
+  }
+}
+
+// 清空输入
+function clearInput(){
+  sourceText.value = '';
+  outputResult.textContent = '';
+  outputResult.style.display = 'none';
+  outputPlaceholder.style.display = 'block';
+  updateCharCount();
+  sourceText.focus();
+}
+
+// 字符计数
+function updateCharCount(){
+  charCount.textContent = `${sourceText.value.length} / 5000`;
+}
+
+// 复制结果
+function copyResult(){
+  const text = outputResult.textContent;
+  if(!text){
+    showToast('没有可复制的内容', 'error');
+    return;
+  }
+  navigator.clipboard.writeText(text).then(()=>{
+    showToast('已复制到剪贴板', 'success');
+  }).catch(()=>{
+    // 降级方案
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showToast('已复制到剪贴板', 'success');
+  });
+}
+
+// 朗读
+function speakSource(){
+  speak(sourceText.value, sourceLang.value);
+}
+function speakTarget(){
+  speak(outputResult.textContent, targetLang.value);
+}
+function speak(text, lang){
+  if(!text){
+    showToast('没有可朗读的内容', 'error');
+    return;
+  }
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  }else{
+    showToast('当前浏览器不支持语音朗读', 'error');
+  }
+}
+
+// 使用常用短语
+function usePhrase(text){
+  sourceText.value = text;
+  updateCharCount();
+  translate();
+}
+
+// 历史记录
+function addToHistory(source, target, from, to){
+  const item = {
+    source, target, from, to,
+    time: new Date().toLocaleString('zh-CN')
+  };
+  history.unshift(item);
+  if(history.length > 20) history = history.slice(0, 20);
+  localStorage.setItem('translateHistory', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory(){
+  if(history.length === 0){
+    historyList.innerHTML = '<div class="empty-history">暂无翻译记录</div>';
+    return;
+  }
+  historyList.innerHTML = history.map((item,index)=>`
+    <div class="history-item" onclick="loadHistory(${index})">
+      <div class="source">${escapeHtml(item.source)}</div>
+      <div class="target">${escapeHtml(item.target)}</div>
+      <div class="meta">${item.from} → ${item.to} · ${item.time}</div>
+    </div>
+  `).join('');
+}
+
+function loadHistory(index){
+  const item = history[index];
+  sourceText.value = item.source;
+  sourceLang.value = item.from;
+  targetLang.value = item.to;
+  outputResult.textContent = item.target;
+  outputPlaceholder.style.display = 'none';
+  outputResult.style.display = 'block';
+  updateCharCount();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function clearHistory(){
+  if(history.length === 0) return;
+  if(confirm('确定要清空所有翻译历史吗？')){
+    history = [];
+    localStorage.removeItem('translateHistory');
+    renderHistory();
+    showToast('历史记录已清空', 'success');
+  }
+}
+
+function escapeHtml(text){
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Toast提示
+function showToast(message, type){
+  toast.textContent = message;
+  toast.className = 'toast show ' + (type || '');
+  setTimeout(()=>{
+    toast.classList.remove('show');
+  }, 2500);
+}
+
+// 快捷键：Ctrl+Enter翻译
+sourceText.addEventListener('keydown',(e)=>{
+  if(e.ctrlKey && e.key === 'Enter'){
+    translate();
+  }
+});
+
+// 初始化
+renderHistory();
+</script>
+</body>
+</html>
